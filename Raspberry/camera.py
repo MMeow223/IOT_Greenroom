@@ -1,30 +1,33 @@
-# from picamera import PiCamera
-# from time import sleep
-# import datetime
-# camera = PiCamera()
+import cv2 as cv
+import uuid
+import datetime
+import os
+from dotenv import load_dotenv
 
-# camera.start_preview(alpha=200)
-# sleep(5)
-# camera.stop_preview()
+load_dotenv()
 
-# def capture_image():
-#     image_filename = datetime.datetime.now().strftime("%Y%m%d%H%M%S") 
-#     camera.capture('/home/pi/Desktop/{0}.jpg'.format(image_filename))
-    
 
-    
-import cv2
+def capture_image():
 
-cam = cv2.VideoCapture(0)
+    filename = '{0}/{1}-{2}.png'.format(os.getenv("IMAGE_FOLDER"), str(datetime.datetime.now().date()),
+                                        str(uuid.uuid4()))
 
-while True:
-    check, frame = cam.read()
+    print(filename)
+    try:
+        cam = cv.VideoCapture(0)
 
-    cv2.imshow('video', frame)
+        ret, frame = cam.read()
 
-    key = cv2.waitKey(1)
-    if key == 27:
-        break
+        if not ret:
+            print("error in retrieving frame")
+            return False
 
-cam.release()
-cv2.destroyAllWindows()
+        img = cv.cvtColor(frame, cv.COLOR_BGRA2BGR)
+        cv.imwrite(filename, img)
+        cam.release()
+        return filename
+
+    except Exception as e:
+        print("error opening camera")
+        print(e)
+        return False
