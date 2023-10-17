@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <h1>{% block title %} Manual Control {% endblock %}</h1>
+
+    <form method="post">
+        <h2>Nutrient Module</h2>
+        <input type="radio" name="nutrient" id="nutrient_on" value="on" />
+        <label for="nutrient_on">On</label><br/>
+        <input type="radio" name="nutrient" id="nutrient_off" value="off" />
+        <label for="nutrient_off">Off</label><br/>
+
+    <h2>Light Module</h2>
+        <input type="radio" name="light" id="light_on" value="on" />
+        <label for="nutrient_on">On</label><br/>
+        <input type="radio" name="light" id="light_off" value="off" />
+        <label for="nutrient_off">Off</label><br/>
+        <input type="submit" value="update"/>
+    </form>
+
+{% endblock %}
