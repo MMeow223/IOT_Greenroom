@@ -3,29 +3,58 @@ import paho.mqtt.client as mqtt
 import os
 import json
 
+# Currently this connects to local db
+import aws_rds_com as db
+
 app = Flask(__name__)
 
 # IP address may change each time broker is restarted
-MQTT_SERVER = "192.168.0.16"
+MQTT_SERVER = "172.20.10.4"
 topic = 'test_channel'
+msg_topic = "sensor"
 port = 5000
 
 def on_connect(client, userdata, flags, rc):
     client.publish(topic, "STARTING SERVER")
     client.publish(topic, "CONNECTED")
+    client.subscribe(msg_topic)
 
 
 def on_message(client, userdata, msg):
-    client.publish(topic, "MESSAGE")
+    payload = str(msg.payload, encoding='utf-8')
+    print(payload)
+    splitStr = payload.split(":")
+    secondSplit = splitStr[1].split(";")
+    match splitStr[0]:
+        case "Water":
+            db.insert_sensor_by_type("moisture", secondSplit[0], secondSplit[1])
+        case "Light Value":
+            db.insert_sensor_by_type("light", secondSplit[0], secondSplit[1])
+        case "Temperature":
+            db.insert_sensor_by_type("temperature", secondSplit[0], secondSplit[1])
+        case "Level":
+            db.insert_sensor_by_type("level", secondSplit[0], secondSplit[1])
 
 
-@app.route('/')
+@app.route('/', methods=['GET', 'POST'])
 def index():
-    return render_template('index.html')
+    greenroom = db.init_db()
+    return render_template('index.html', greenroom=greenroom)
 
-@app.route('/greenroom-detail')
-def page_greenroom_detail():
-    return render_template('greenroom-detail.html')
+@app.route('/greenroom-detail/<id>', methods=['GET', 'POST'])
+def page_greenroom_detail(id):
+    all_param = ["nutrient", "water", "light", "fan"]
+    for param in all_param:
+        # Get the posted value
+        value = request.form.get(param)
+        if value != None:
+            msg = f"{param}:{value}"
+            print(msg)
+            db.insert_actuator_by_type(param,value,id)
+            client.publish(topic, msg)
+
+    greenroom = db.select_by_id(id)
+    return render_template('greenroom-detail.html', greenroom=greenroom)
 
 @app.route('/manual', methods=['GET', 'POST'])
 # Template for publishing manual control messages through MQTT
@@ -35,15 +64,16 @@ def manual_control():
     for param in all_param:
         # Get the posted value
         value = request.form.get(param)
-        if value != "None":
+        if value != None:
             msg = f"{param}:{value}"
+            print(msg)
             client.publish(topic, msg)
 
     return render_template('manual_control.html')
 
-@app.route('/page2')
-def page2():
-    return render_template('page2.html')
+@app.route('/analysis')
+def analysis():
+    return render_template('analysis.html')
 
 if __name__ == '__main__':
     client = mqtt.Client()
@@ -54,3 +84,5 @@ if __name__ == '__main__':
     client.loop_start()
 
     app.run(host='0.0.0.0', port=port)
+
+    

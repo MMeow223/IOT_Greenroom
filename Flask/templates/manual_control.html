@@ -1,21 +1,46 @@
-{% extends 'base.html' %}
+<!-- {% extends 'base.html' %}
 
 {% block content %}
     <h1>{% block title %} Manual Control {% endblock %}</h1>
 
     <form method="post">
-        <h2>Nutrient Module</h2>
-        <input type="radio" name="nutrient" id="nutrient_on" value="on" />
-        <label for="nutrient_on">On</label><br/>
-        <input type="radio" name="nutrient" id="nutrient_off" value="off" />
-        <label for="nutrient_off">Off</label><br/>
+        <div class="block-container">
+            <p class="p-title">Nutrient Pump</p>
+            <p>Nutrient Pump last activated on {Timestamp}</p>
+            <input type="radio" name="nutrient" id="nutrient_on" value="on" />
+            <label for="nutrient_on">On</label><br/>
+        </div>
 
-    <h2>Light Module</h2>
-        <input type="radio" name="light" id="light_on" value="on" />
-        <label for="nutrient_on">On</label><br/>
-        <input type="radio" name="light" id="light_off" value="off" />
-        <label for="nutrient_off">Off</label><br/>
-        <input type="submit" value="update"/>
+        <div class="block-container">
+            <p>Water Pump</p>
+            <p>Water Pump last activated on {Timestamp}</p>
+            <p>Current water moisture level {Moisture Level}</p>
+            <input type="radio" name="water" id="water_on" value="on" />
+            <label for="water_on">On</label><br/>
+        </div>
+        
+        <div class="block-container">
+            <p class="p-title">Growth Light</p>
+            <input type="radio" name="light" id="light_off" value="off" />
+            <label for="light_off">Off</label><br/>
+            <input type="radio" name="light" id="light_one" value="one" />
+            <label for="light_one">Brightness Level 1</label><br/>
+            <input type="radio" name="light" id="light_two" value="two" />
+            <label for="light_two">Brightness Level 2</label><br/>
+            <input type="radio" name="light" id="light_three" value="three" />
+            <label for="light_three">Brightness Level 3</label><br/>
+        </div>
+        
+        <div class="block-container">
+            <p>Fan</p>
+            <p>Fan is currently {Status}</p>
+            <p>Fan last activated on {Timestamp}</p>
+            <input type="radio" name="fan" id="fan_on" value="on" />
+            <label for="fan_on">On</label><br/>
+            <input type="radio" name="fan" id="fan_off" value="off" />
+            <label for="fan_off">Off</label><br/>
+        </div>
+
     </form>
 
-{% endblock %}
+{% endblock %} -->

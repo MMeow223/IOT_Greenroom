@@ -1,5 +1,55 @@
 {% extends 'base.html' %}
 
 {% block content %}
-    <h1>{% block title %} Dashboard Here {% endblock %}</h1>
+<div class="row">
+    
+    <div class="col-12">
+        <h1>{% block title %}Greenroom{% endblock %}</h1>
+    </div>
+
+</div>
+
+<div class="row">
+
+    {% for gr in greenroom %}
+    <div class="col-6">
+        <div class="card w-100 border-dark mb-3">
+            <img class="card-img-top" src="../static/images/plant_placeholder.jpg" alt="Card image cap">
+            <div class="card-body text-dark">
+                <h5 class="card-title">{{gr.name}}</h5>
+                <div class="flexbox-horizontal">
+                    <div class="flexbox-vertical temperature">
+                        <p>Temperature</p>
+                        <p>{{gr.temperature}} &deg;C</p>
+                    </div>
+                    <div class="flexbox-vertical light">
+                        <p>Light Intensity</p>
+                        <p>{{gr.light}} arb. unit</p>
+                    </div>
+                    <div class="flexbox-vertical moisture">
+                        <p>Soil Moisture</p>
+                        <p>{{gr.moisture}} %</p>
+                    </div>
+                </div>
+                <div class="flexbox-horizontal">
+                    {% if gr.nutrientLow == True %}
+                    <div class="flexbox-vertical nutrient-warning">
+                        <p>Warning</p>
+                        <p>Nutrient Solution Low</p>
+                    </div>
+                    {% else %}
+                    <div class="flexbox-vertical nutrient-warning div-placeholder">
+                        <p>Warning</p>
+                        <p>Nutrient Solution Low</p>
+                    </div>
+                    {% endif %}
+                </div>
+                <a href="{{ url_for('page_greenroom_detail', id=gr.id) }}">View Detail</a>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+    
+</div>
+
 {% endblock %}
