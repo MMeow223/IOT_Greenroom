@@ -29,7 +29,7 @@ def select_by_id(id:int):
     param = (id,)
     cursor.execute(sql, param)
     result = cursor.fetchone()
-    if result == "0":
+    if result[0] == "0":
         gr["nutrientLow"] = True
     else:
         gr["nutrientLow"] = False

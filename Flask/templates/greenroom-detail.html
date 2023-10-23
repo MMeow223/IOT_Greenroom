@@ -27,7 +27,7 @@
             </div>
             <div class="flexbox-vertical moisture">
                 <p>Soil Moisture</p>
-                <p>{{greenroom.moisture}} %</p>
+                <p>{{greenroom.moisture}} arb. unit</p>
             </div>
         </div>
     </div>
@@ -36,12 +36,18 @@
         <form method="post">
             <div class="form-group">
                 <p class="form-title">Nutrient Pump</p>
-                {% if greenroom.nutrientStatus == "0" %}
-                <p>Nutrient Pump last activated on {{greenroom.nutrientTime}}</p>
-                <button type="submit" class="btn btn-primary" name="nutrient" id="nutrient_on" value="1">Turn On</button>
+                {% if greenroom.nutrientLow == False %}
+                    {% if greenroom.nutrientStatus == "0" %}
+                    <p>Nutrient Pump last activated on {{greenroom.nutrientTime}}</p>
+                    <button type="submit" class="btn btn-primary" name="nutrient" id="nutrient_on" value="1">Turn On</button>
+                    {% else %}
+                    <p>Nutrient Pump currently running, will stop on {{greenroom.nutrientTime}}</p>
+                    <button type="submit" class="btn btn-primary" name="nutrient" id="nutrient_off" value="0">Turn Off</button>
+                    {% endif %}
                 {% else %}
-                <p>Nutrient Pump currently running, will stop on {{greenroom.nutrientTime}}</p>
-                <button type="submit" class="btn btn-primary" name="nutrient" id="nutrient_off" value="0">Turn Off</button>
+                    <p>Nutrient Pump last activated on {{greenroom.nutrientTime}}</p>
+                    <button type="submit" class="btn btn-primary" name="nutrient" id="nutrient_on" value="1" disabled>Turn On</button>
+                    <small class="form-text text-muted">Nutrient solution low, function disabled</small>
                 {% endif %}
             </div>
         </form>
