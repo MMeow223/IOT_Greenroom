@@ -31,3 +31,6 @@ def capture_image():
         print("error opening camera")
         print(e)
         return False
+
+
+capture_image()
