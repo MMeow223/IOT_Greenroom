@@ -1,55 +1,186 @@
-{% extends 'base.html' %}
-
-{% block content %}
-<div class="row">
-    
-    <div class="col-12">
-        <h1>{% block title %}Greenroom{% endblock %}</h1>
-    </div>
-
+{% extends 'base.html' %} {% block style %}
+<link
+  rel="stylesheet"
+  type="text/css"
+  href="{{ url_for('static', filename='css/index.css') }}"
+/>
+{% endblock %} {% block content %}
+<div class="d-flex flex-row">
+  <div class="h1">Dashboard</div>
+  <a href="/">
+    <button type="button" class="btn btn-success">
+      <i class="fas fa-plus"></i> Add Greenroom
+    </button>
+  </a>
 </div>
 
-<div class="row">
+<script>
+  var data = {};
+  // Configuration options
+  var options = {
+    legend: {
+      display: false,
+    },
+    title: {
+      display: true,
+      text: "Temperature",
+    },
+    maintainAspectRatio: false, // This prevents the chart from maintaining a fixed aspect ratio
+    responsive: true,
+    scales: {
+      xAxes: [
+        {
+          ticks: {
+            display: false,
+          },
+        },
+      ],
+      yAxes: [
+        {
+          ticks: {
+            display: false,
+          },
+        },
+      ],
+    },
+  };
+</script>
 
-    {% for gr in greenroom %}
-    <div class="col-6">
-        <div class="card w-100 border-dark mb-3">
-            <img class="card-img-top" src="../static/images/plant_placeholder.jpg" alt="Card image cap">
-            <div class="card-body text-dark">
-                <h5 class="card-title">{{gr.name}}</h5>
-                <div class="flexbox-horizontal">
-                    <div class="flexbox-vertical temperature">
-                        <p>Temperature</p>
-                        <p>{{gr.temperature}} &deg;C</p>
-                    </div>
-                    <div class="flexbox-vertical light">
-                        <p>Light Intensity</p>
-                        <p>{{gr.light}} arb. unit</p>
-                    </div>
-                    <div class="flexbox-vertical moisture">
-                        <p>Soil Moisture</p>
-                        <p>{{gr.moisture}} arb. unit</p>
-                    </div>
-                </div>
-                <div class="flexbox-horizontal">
-                    {% if gr.nutrientLow == True %}
-                    <div class="flexbox-vertical nutrient-warning">
-                        <p>Warning</p>
-                        <p>Nutrient Solution Low</p>
-                    </div>
-                    {% else %}
-                    <div class="flexbox-vertical nutrient-warning div-placeholder">
-                        <p>Warning</p>
-                        <p>Nutrient Solution Low</p>
-                    </div>
-                    {% endif %}
-                </div>
-                <a href="{{ url_for('page_greenroom_detail', id=gr.id) }}">View Detail</a>
-            </div>
+{% for rec in data.chart_data %} {% for r in rec %}
+<p>{{ r.value }}</p>
+{% endfor %} {% endfor %}
+
+<div class="row">
+  {% for gr in data.greenroom %}
+  <a class="card-link" href="{{ url_for('page_greenroom_detail', id=gr.id) }}">
+    <div class="card greenroom-container p-1">
+      <div class="d-flex">
+        <img
+          class="card-img-top w-25 h-25"
+          src="https://watchandlearn.scholastic.com/content/dam/classroom-magazines/watchandlearn/videos/animals-and-plants/plants/what-are-plants-/What-Are-Plants.jpg"
+          alt="Card image cap"
+        />
+        <h5 class="card-title mx-auto my-auto">{{ gr.name }}</h5>
+      </div>
+      <div class="card-body">
+        <div class="d-flex justify-content-between">
+          <div class="mb-5" style="width: 110px; height: 110px">
+            <p id="current_data{{gr.greenroom_id}}0" class="text-center">0</p>
+            <canvas id="lineChart{{ gr.greenroom_id }}0"></canvas>
+          </div>
+          <div class="mb-5" style="width: 110px; height: 110px">
+            <p id="current_data{{gr.greenroom_id}}1" class="text-center">0</p>
+            <canvas id="lineChart{{ gr.greenroom_id }}1"></canvas>
+          </div>
+          <div class="mb-5" style="width: 110px; height: 110px">
+            <p id="current_data{{gr.greenroom_id}}2" class="text-center">0</p>
+            <canvas id="lineChart{{ gr.greenroom_id }}2"></canvas>
+          </div>
+          <script>
+            var soil_label = JSON.parse(
+              "{{ gr.soil_chart_label }}".replace(/&#39;/g, '"')
+            );
+            var light_label = JSON.parse(
+              "{{ gr.light_chart_label }}".replace(/&#39;/g, '"')
+            );
+            var temp_label = JSON.parse(
+              "{{ gr.temperature_chart_label }}".replace(/&#39;/g, '"')
+            );
+
+            var soil_data = JSON.parse(
+              "{{ gr.soil_chart_data }}".replace(/&#39;/g, '"')
+            );
+            var light_data = JSON.parse(
+              "{{ gr.light_chart_data }}".replace(/&#39;/g, '"')
+            );
+            var temp_data = JSON.parse(
+              "{{ gr.temperature_chart_data }}".replace(/&#39;/g, '"')
+            );
+
+            document.getElementById(
+              "current_data{{gr.greenroom_id}}0"
+            ).innerHTML = soil_data[soil_data.length - 1];
+
+            document.getElementById(
+              "current_data{{gr.greenroom_id}}1"
+            ).innerHTML = light_data[light_data.length - 1];
+
+            document.getElementById(
+              "current_data{{gr.greenroom_id}}2"
+            ).innerHTML = temp_data[temp_data.length - 1];
+
+            chart_1_data = {
+              labels: soil_label,
+              datasets: [
+                {
+                  data: soil_data,
+                  borderColor: "rgb(75, 192, 192)",
+                  borderWidth: 2,
+                  fill: false, // Set fill to false to show only the line
+                },
+              ],
+            };
+            chart_2_data = {
+              labels: light_label,
+              datasets: [
+                {
+                  data: light_data,
+                  borderColor: "rgb(75, 192, 192)",
+                  borderWidth: 2,
+                  fill: false, // Set fill to false to show only the line
+                },
+              ],
+            };
+            chart_3_data = {
+              labels: temp_label,
+              datasets: [
+                {
+                  data: temp_data,
+                  borderColor: "rgb(75, 192, 192)",
+                  borderWidth: 2,
+                  fill: false, // Set fill to false to show only the line
+                },
+              ],
+            };
+
+            options.title.text = "Soil Moisture";
+            var chart = new Chart(
+              document
+                .getElementById("lineChart{{ gr.greenroom_id }}0")
+                .getContext("2d"),
+              {
+                type: "line",
+                data: chart_1_data,
+                options: options,
+              }
+            );
+            options.title.text = "Light";
+            var chart = new Chart(
+              document
+                .getElementById("lineChart{{ gr.greenroom_id }}1")
+                .getContext("2d"),
+              {
+                type: "line",
+                data: chart_2_data,
+                options: options,
+              }
+            );
+            options.title.text = "Temperature";
+            var chart = new Chart(
+              document
+                .getElementById("lineChart{{ gr.greenroom_id }}2")
+                .getContext("2d"),
+              {
+                type: "line",
+                data: chart_3_data,
+                options: options,
+              }
+            );
+          </script>
         </div>
+      </div>
     </div>
-    {% endfor %}
-    
+  </a>
+  {% endfor %}
 </div>
-
 {% endblock %}
