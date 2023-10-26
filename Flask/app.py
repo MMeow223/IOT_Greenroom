@@ -9,9 +9,9 @@ import tempfile
 
 # from dotenv import load_dotenv
 # from AWSIoTPythonSDK.MQTTLib import AWSIoTMQTTClient
-# # from firebase import firebase
-# import firebase_admin
-# from firebase_admin import credentials, storage
+# from firebase import firebase
+import firebase_admin
+from firebase_admin import credentials, storage
 
 
 # Currently this connects to local db
@@ -21,10 +21,10 @@ from aws_rds_com import *
 
 CREDENTIALS = os.getenv("CREDENTIALS")
 FIREBASE_STORAGE = os.getenv("FIREBASE_STORAGE")
-# cred = credentials.Certificate(CREDENTIALS)
-# firebase_app = firebase_admin.initialize_app(cred, {
-#         'storageBucket': FIREBASE_STORAGE
-#     })
+cred = credentials.Certificate(CREDENTIALS)
+firebase_app = firebase_admin.initialize_app(cred, {
+        'storageBucket': FIREBASE_STORAGE
+    })
 app = Flask(__name__)
 
 # IP address may change each time broker is restarted
@@ -117,7 +117,7 @@ def index():
 
 
 @app.route('/create_greenroom', methods=['GET', 'POST'])
-def create_greenroom():
+def create_greenroom_page():
     
     if request.method == 'POST':
         
@@ -128,22 +128,21 @@ def create_greenroom():
         file = request.files['images']
         
 
+        image_url = "default.jpg"
        # Check if a file was submitted
-        # if file:
-        #     # Create a reference to the Firebase Storage location where you want to store the image
-        #     storage_ref = storage.bucket().blob("greenroom_images/" + file.filename)
+        if file:
+            # Create a reference to the Firebase Storage location where you want to store the image
+            storage_ref = storage.bucket().blob("greenroom_images/" + file.filename)
             
-        #     # Upload the file to Firebase Storage
-        #     storage_ref.upload_from_string(file.read(), content_type=file.content_type)
+            # Upload the file to Firebase Storage
+            storage_ref.upload_from_string(file.read(), content_type=file.content_type)
             
-        #     # Get the URL of the uploaded image
-        #     image_url = storage_ref.public_url
+            # Get the URL of the uploaded image
+            image_url = storage_ref.public_url
+        
+        # Create the greenroom in your database, including the image URL
+        create_greenroom(name, location, description, image_url)
             
-        #     # Create the greenroom in your database, including the image URL
-        #     create_greenroom(name, location, description, image_url)
-            
-        #     # Optionally, you can provide feedback to the user, e.g., by redirecting to a success page
-        #     # return render_template('success.html', image_url=image_url)
     
     return render_template('create_greenroom.html')
 
@@ -185,12 +184,18 @@ def page_greenroom_detail(id):
 
     greenroom["water_level"] = current_water_level
     
-    all_greenroom = db.get_greenroom_all()
-    greenroom_name = ""
-    for gr in all_greenroom:
-        if gr["greenroom_id"] == id:
-            greenroom_name = gr["name"]
-    greenroom["name"] = greenroom_name
+    greenroom["name"] = get_greenroom(id)[0]["name"]
+    greenroom["image"] = get_greenroom(id)[0]["image"]
+    
+    # all_greenroom = db.get_greenroom_all()
+    # greenroom_name = ""
+    
+    # for gr in all_greenroom:
+    #     if gr["greenroom_id"] == id:
+    #         greenroom_name = gr["name"]
+    # greenroom["name"] = greenroom_name
+    
+    print(greenroom)
 
     return render_template('greenroom-detail.html', greenroom=greenroom)
 

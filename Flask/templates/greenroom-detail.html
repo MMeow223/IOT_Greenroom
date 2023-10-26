@@ -1,114 +1,181 @@
-{% extends 'base.html' %}
-
-{% block style %}
+{% extends 'base.html' %} {% block style %}
 <link
   rel="stylesheet"
   type="text/css"
   href="{{ url_for('static', filename='css/greenroom_detail.css') }}"
 />
-{% endblock %}
-
-{% block content %}
+{% endblock %} {% block content %}
 <div class="row">
-    <div class="col-12">
-        {% if greenroom.water_level == True %}
-        <div class="alert alert-danger" role="alert">
-            Nutrient solution low, please fill it immediately!
-        </div>
-        {% endif %}
-
-        <h1>{% block title %}{{ greenroom.name }}{% endblock %}</h1>
+  <div class="col-12">
+    {% if greenroom.water_level == True %}
+    <div class="alert alert-danger" role="alert">
+      Nutrient solution low, please fill it immediately!
     </div>
+    {% endif %}
+
+    <h1>{% block title %}{{ greenroom.name }}{% endblock %}</h1>
+  </div>
 </div>
-
+<hr />
 <div class="row">
-    <div class="col-6">
-        <img src="../static/images/plant_placeholder.jpg" class="img-plant-detail" alt="Plant Image">
-        <div class="flexbox-horizontal">
-            <div class="flexbox-vertical temperature">
-                <p>Temperature</p>
-                <p>{{greenroom.temperature}} &deg;C</p>
-            </div>
-            <div class="flexbox-vertical light">
-                <p>Light Intensity</p>
-                <p>{{greenroom.light}} arb. unit</p>
-            </div>
-            <div class="flexbox-vertical moisture">
-                <p>Soil Moisture</p>
-                <p>{{greenroom.moisture}} arb. unit</p>
-            </div>
-        </div>
+  <div class="col-6 text-center">
+    <img
+      src="https://firebasestorage.googleapis.com/v0/b/iot-greenroom.appspot.com/o/greenroom_images%2F{{greenroom.image}}?alt=media"
+      class="img-plant-detail"
+      alt="Plant Image"
+    />
+    <div class="flexbox-horizontal m-5 justify-content-between">
+      <div class="flexbox-vertical temperature">
+        <p>Temperature</p>
+        <p>{{greenroom.temperature}} &deg;C</p>
+      </div>
+      <div class="flexbox-vertical light">
+        <p>Light Intensity</p>
+        <p>{{greenroom.light}} arb. unit</p>
+      </div>
+      <div class="flexbox-vertical moisture">
+        <p>Soil Moisture</p>
+        <p>{{greenroom.moisture}} arb. unit</p>
+      </div>
     </div>
+  </div>
 
-    <div class="col-6">
-        <form method="post">
-            <div class="form-group">
-                <p class="form-title">Nutrient Pump</p>
-                {% if greenroom.water_level == False %}
-                    {% if greenroom.water_action == "0" %}
-                    <p>Nutrient Pump last activated on {{greenroom.water_timestamp}}</p>
-                    <button type="submit" class="btn btn-primary" name="nutrient" id="nutrient_on" value="1">Turn On</button>
-                    {% else %}
-                    <p>Nutrient Pump currently running, will stop on {{greenroom.water_timestamp}}</p>
-                    <button type="submit" class="btn btn-primary" name="nutrient" id="nutrient_off" value="0">Turn Off</button>
-                    {% endif %}
-                {% else %}
-                    <p>Nutrient Pump last activated on {{greenroom.water_timestamp}}</p>
-                    <button type="submit" class="btn btn-primary" name="nutrient" id="nutrient_on" value="1" disabled>Turn On</button>
-                    <small class="form-text text-muted">Nutrient solution low, function disabled</small>
-                {% endif %}
-            </div>
-        </form>
+  <div class="col-6 card">
+    <form method="post">
+      <div class="form-group">
+        <p class="form-title">Nutrient Pump</p>
+        {% if greenroom.water_level == False %} {% if greenroom.water_action ==
+        "0" %}
+        <p>Nutrient Pump last activated on {{greenroom.water_timestamp}}</p>
+        <button
+          type="submit"
+          class="btn btn-primary"
+          name="nutrient"
+          id="nutrient_on"
+          value="1"
+        >
+          Turn On
+        </button>
+        {% else %}
+        <p>
+          Nutrient Pump currently running, will stop on
+          {{greenroom.water_timestamp}}
+        </p>
+        <button
+          type="submit"
+          class="btn btn-primary"
+          name="nutrient"
+          id="nutrient_off"
+          value="0"
+        >
+          Turn Off
+        </button>
+        {% endif %} {% else %}
+        <p>Nutrient Pump last activated on {{greenroom.water_timestamp}}</p>
+        <button
+          type="submit"
+          class="btn btn-primary"
+          name="nutrient"
+          id="nutrient_on"
+          value="1"
+          disabled
+        >
+          Turn On
+        </button>
+        <small class="form-text text-muted"
+          >Nutrient solution low, function disabled</small
+        >
+        {% endif %}
+      </div>
+    </form>
 
-        <form method="post">
-            <div class="form-group">
-                <p class="form-title">Water Pump</p>
-                {% if greenroom.moisture_action == "0" %}
-                <p>Water Pump last activated on {{greenroom.moisture_timestamp}}</p>
-                <button type="submit" name="water" class="btn btn-primary" id="water_on" value="1">Turn On</button>
-                {% else %}
-                <p>Water Pump currently running, will stop on {{greenroom.moisture_timestamp}}</p>
-                <button type="submit" name="water" class="btn btn-primary" id="water_off" value="0">Turn Off</button>
-                {% endif %}
-            </div>
-        </form>
+    <form method="post">
+      <div class="form-group">
+        <p class="form-title">Water Pump</p>
+        {% if greenroom.moisture_action == "0" %}
+        <p>Water Pump last activated on {{greenroom.moisture_timestamp}}</p>
+        <button
+          type="submit"
+          name="water"
+          class="btn btn-primary"
+          id="water_on"
+          value="1"
+        >
+          Turn On
+        </button>
+        {% else %}
+        <p>
+          Water Pump currently running, will stop on
+          {{greenroom.moisture_timestamp}}
+        </p>
+        <button
+          type="submit"
+          name="water"
+          class="btn btn-primary"
+          id="water_off"
+          value="0"
+        >
+          Turn Off
+        </button>
+        {% endif %}
+      </div>
+    </form>
 
-        <form method="post">
-            <div class="form-group">
-                <p class="form-title">Growth Light</p>
-                {% if greenroom.light_action == "0" %}
-                <p>Growth light last activated on {{greenroom.light_timestamp}}</p>
-                {% else %}
-                <p>Growth light currently activated at Brightness Level {{greenroom.light_action}}</p>
-                {% endif %}
+    <form method="post">
+      <div class="form-group">
+        <p class="form-title">Growth Light</p>
+        {% if greenroom.light_action == "0" %}
+        <p>Growth light last activated on {{greenroom.light_timestamp}}</p>
+        {% else %}
+        <p>
+          Growth light currently activated at Brightness Level
+          {{greenroom.light_action}}
+        </p>
+        {% endif %} <input type="radio" name="light" id="light_off" value="0" {%
+        if greenroom.light_action == '0' %} checked {% endif %} >
+        <label for="light_off">Off</label><br />
+        <input type="radio" name="light" id="light_one" value="1" {% if
+        greenroom.light_action == '1' %} checked {% endif %} >
+        <label for="light_one">Brightness Level 1</label><br />
+        <input type="radio" name="light" id="light_two" value="2" {% if
+        greenroom.light_action == '2' %} checked {% endif %} >
+        <label for="light_two">Brightness Level 2</label><br />
+        <input type="radio" name="light" id="light_three" value="3" {% if
+        greenroom.light_action == '3' %} checked {% endif %} >
+        <label for="light_three">Brightness Level 3</label><br />
+      </div>
+      <button type="submit" class="btn btn-primary">Update</button>
+    </form>
 
-                <input type="radio" name="light" id="light_off" value="0" {% if greenroom.light_action == '0' %} checked {% endif %} >
-                <label for="light_off">Off</label><br/>
-                <input type="radio" name="light" id="light_one" value="1" {% if greenroom.light_action == '1' %} checked {% endif %} >
-                <label for="light_one">Brightness Level 1</label><br/>
-                <input type="radio" name="light" id="light_two" value="2" {% if greenroom.light_action == '2' %} checked {% endif %} >
-                <label for="light_two">Brightness Level 2</label><br/>
-                <input type="radio" name="light" id="light_three" value="3" {% if greenroom.light_action == '3' %} checked {% endif %} >
-                <label for="light_three">Brightness Level 3</label><br/>
-
-            </div>
-            <button type="submit" class="btn btn-primary">Update</button>
-        </form>
-
-        <form method="post">
-            <div class="form-group">
-                <p class="form-title">Fan</p>
-                {% if greenroom.temperature_action == "0" %}
-                <p>Fan last activated on {{greenroom.temperature_timestamp}}</p>
-                <button type="submit" name="fan" class="btn btn-primary" id="fan_on" value="1">Turn on</button>
-                {% else %}
-                <p>Fan is currently on</p>
-                <button type="submit" name="fan" class="btn btn-primary" id="fan_off" value="0">Turn off</button>
-                {% endif %}
-            </div>
-        </form>
-
-    </div>
+    <form method="post">
+      <div class="form-group">
+        <p class="form-title">Fan</p>
+        {% if greenroom.temperature_action == "0" %}
+        <p>Fan last activated on {{greenroom.temperature_timestamp}}</p>
+        <button
+          type="submit"
+          name="fan"
+          class="btn btn-primary"
+          id="fan_on"
+          value="1"
+        >
+          Turn on
+        </button>
+        {% else %}
+        <p>Fan is currently on</p>
+        <button
+          type="submit"
+          name="fan"
+          class="btn btn-primary"
+          id="fan_off"
+          value="0"
+        >
+          Turn off
+        </button>
+        {% endif %}
+      </div>
+    </form>
+  </div>
 </div>
 
 {% endblock %}

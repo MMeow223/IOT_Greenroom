@@ -93,6 +93,27 @@ def get_record_date(date, type = { "soil_moisture", "water_level", "air_moisture
         
     return result_list
 
+def get_greenroom(id):
+    conn = connect_db()
+    cursor = conn.cursor()
+    sql = "SELECT * FROM greenroom WHERE greenroom_id = %s"
+    param = (id,)
+    cursor.execute(sql,param)
+    result = cursor.fetchall()
+    
+    result_list = []
+    for row in result:
+        result_dict = {
+            "greenroom_id": row[0],
+            "name": row[1],  # Convert Decimal to string
+            "location": row[2],  # Format datetime as string
+            "desrciption": row[3],
+            "image": row[4]
+        }
+        result_list.append(result_dict)
+        
+    return result_list
+
 def get_greenroom_all():
     conn = connect_db()
     cursor = conn.cursor()
@@ -106,7 +127,8 @@ def get_greenroom_all():
             "greenroom_id": row[0],
             "name": row[1],  # Convert Decimal to string
             "location": row[2],  # Format datetime as string
-            "desrciption": row[3]
+            "desrciption": row[3],
+            "image": row[4]
         }
         result_list.append(result_dict)
         
@@ -115,7 +137,7 @@ def get_greenroom_all():
 def create_greenroom(name, location, description,image_url):
     conn = connect_db()
     cursor = conn.cursor()
-    sql = "INSERT INTO greenroom (name, location, description, image) VALUES (%s, %s, %s)"
+    sql = "INSERT INTO greenroom (name, location, description, image) VALUES (%s, %s, %s, %s)"
     param = (name, location, description,image_url,)
     cursor.execute(sql, param)
     conn.commit()
