@@ -52,7 +52,7 @@
 
 <div class="row">
   {% for gr in data.greenroom %}
-  <a class="card-link" href="{{ url_for('page_greenroom_detail', id=gr.id) }}">
+  <a class="card-link" href="{{ url_for('page_greenroom_detail', id=gr.greenroom_id) }}">
     <div
       class="card greenroom-container p-1 {% if gr.water_level %} border-danger border-5 {% endif %}"
     >

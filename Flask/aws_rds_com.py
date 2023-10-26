@@ -71,6 +71,8 @@ def get_record_greenroom(greenroom_id, today=False, type = { "soil_moisture", "w
         
     return result_list
 
+
+
 def get_record_date(date, type = { "soil_moisture", "water_level", "air_moisture", "light", "temperature"}):
     conn = connect_db()
     cursor = conn.cursor()
@@ -117,6 +119,52 @@ def create_greenroom(name, location, description,image_url):
     param = (name, location, description,image_url,)
     cursor.execute(sql, param)
     conn.commit()
+
+def get_record_greenroom_all_actuator_one(greenroom_id, today=False):
+    ACTUATOR_CONVERSION = {
+        'temperature_actuator_activity' : "temperature",
+        'light_actuator_activity' : "light",
+        'air_moisture_actuator_activity' : "air",
+        'soil_moisture_actuator_activity' : "moisture",
+        'water_level_actuator_activity' : "water"
+    }
+
+    result_dict = {}
+    table_name = [
+        'temperature_actuator_activity',
+        'light_actuator_activity',
+        'air_moisture_actuator_activity',
+        'soil_moisture_actuator_activity',
+        'water_level_actuator_activity'
+    ]
+
+    conn = connect_db()
+    cursor = conn.cursor()
+
+    for t in table_name:
+        sql = "SELECT action,timestamp FROM `"+t+"` WHERE greenroom_id = %s AND timestamp >= %s ORDER BY timestamp DESC LIMIT 1"
+
+        if today:
+            # equal to 0:00:00 today
+            date = datetime.now() - timedelta(days=1)
+            # now = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+        else:
+            # start from year 2023
+            date = datetime(2023, 1, 1)
+            
+        param = (greenroom_id, date,)
+        cursor.execute(sql, param)
+        result = cursor.fetchone()
+        
+        param_action = ACTUATOR_CONVERSION[t]+"_action"
+        param_timestamp = ACTUATOR_CONVERSION[t]+"_timestamp"
+
+        if result != None :
+            result_dict[param_action] = result[0]
+            result_dict[param_timestamp] = result[1].strftime('%Y-%m-%d %H:%M:%S')  # Format datetime as string        
+        
+    return result_dict
+
 # def select_by_id(id:int):
 #     conn = connect_db()
 #     cursor = conn.cursor()
