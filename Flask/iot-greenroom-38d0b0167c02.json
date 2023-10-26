@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "iot-greenroom",
+  "private_key_id": "130f7501bad3798c1ab73de30caf86c9e6ff890d",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDDpyEfdzpveB4n\neqJKovMsNVb9kmJiAFnZLXX+a2DtAkLI+ZOEt8mJcGqleHve7/ZXqdY3zofB2Q/m\nV9/ycVZHOE0SGTJeQpt5ddVjMtjzQKw/mp+LMDRWPxzcxGbC2FxEib73ylKaxn1y\ndMqOjYtrpjPBIwGPeXhumg/yhX4GE2nv24xiMXGIZZx9UxnjiTnkV6rGSrYT+VYL\nzUL7EqYh9ew2uVBrMTvllRMwIpz5j3p3/ySlc0cXPhi25m+oxc7rSE56EBw7utZ2\nf3njMhEOR6w1NPwpEtlQ+cIlBrOU3zEfxFXJIY/wEcHNLcAXBcEEFScmthmylWfb\nFmW+JG3zAgMBAAECggEAHXqolHef79yu2m7xVgKQVihhR4qPVUnNP9pILYHbVEqj\nammkTvpsHM+52d25+EC6osG9u6HcNZpxeVjjLsHh6JA0mJYAT1CE4XueH7ixFJG5\ngknXYR7tu9L9k8vp2dDEsjT495fd82EV1LGBNZJhH+KmaKLQIOCCA1QmM/nmH574\nl+1OBSBfGRt+dt2HXh0gGEFNHKANWGLFFERxb1sBoddf2t9GDfU0Oq8civyddi+Q\nGojJ3Y+YG45rR/bl/eWLr/Xkr3Ns3yJyvU6FmUHyGONJM7mn5hGBiSbl+mX3McjQ\nKmw3jEvIizihVNvZ9PbaYN3rLEt26Vn0gUMZ6MOihQKBgQDws2gWMJU5BrffbzZo\np3V1gVBfOMQZ7QC4YI9JUMp7+j6MC0iIOJ/h5ORNVck9E5ZBTq5WRj4IUY0Vpk+r\nZoDnjyfhT4IQQdLqD2hDN95+lILU3N+FPnMmbY15Fk8rTGK5cp2/L6VKwVuTF9SG\n8j7k8BtCTRInW83ErMMvGU5fPwKBgQDQFrgjrNYX4Un9IiBrZqjpDGN9Ok0YZrFV\nw5KNL4ovFbyleYmRjceLL56bNAIFOsME0MiINXTL/yrTleR6otpmciKdA/mdn5Ld\nl7ub1fJUdBt0m6cZq4zFQ+6OlOUlR9nQI/uQ3qVNIOOQPWm+EVnFE5ewCN9z9SX7\nycijUEQ4TQKBgQCsiN1GcqK0UtWAipZkpAy1IvF6oBUpRFKs10I+WnQaNEGbXwcp\n5fTtFoZzzNdIOX8N5xlebFFQ4ywPZbxb70jdMydyAO0JPDW0Y0DoVebdsxSpAn4S\nY7ZkyEiNkGlFbyahKcBbaArCsCE1KfLEnGZq8pWHi/lETzELFo9+dlRQPwKBgA4l\nLTlHm3oeF3B8rGWAogTNkcnGd80r1ew1kjXEwIj42k0JWP+q+qCMiSSVwXlniDBA\nnREdSSZA30Fo1BI+FciXA6FWztYXLd2gXeF3BrUU+3TOy+ojzjrupj3NA1KocrcC\nayxq5iO7E50Pf6uq9EZAUbRmtgHk7UMTcW8gmrKVAoGBAJ0RYvl+RQBjMO6A6QWO\n5yYDdK3uI4ps/zZNny59/N7x2zhGf9bPrGWJlcISsvCsCUmTCr6EsVohEEU/fo+w\nhk6hcDclTmnjFXTcFPTrGlKO4kkhxsHk95xeiJOHjd9W1jVMFUOIDyOui93MEDgP\nKoLy0DkUxTE7qYcyGqM2WRka\n-----END PRIVATE KEY-----\n",
+  "client_email": "firebase-adminsdk-fpzhl@iot-greenroom.iam.gserviceaccount.com",
+  "client_id": "100592890615600618946",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-fpzhl%40iot-greenroom.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}

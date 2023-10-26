@@ -1,0 +1,59 @@
+{% extends 'base.html' %} {% block style %}
+<link
+  rel="stylesheet"
+  type="text/css"
+  href="{{ url_for('static', filename='css/index.css') }}"
+/>
+{% endblock %} {% block content %}
+<div class="d-flex flex-row">
+  <div class="h1">Create Greenroom</div>
+</div>
+<!-- create form with name, location, description -->
+<form method="POST" enctype="multipart/form-data">
+  <!-- upload images -->
+  <div class="form-group">
+    <label for="images">Upload Images</label>
+    <input
+      type="file"
+      class="form-control-file"
+      id="images"
+      name="images"
+      accept="image/png,  image/jpeg"
+    />
+  </div>
+  <div class="form-group">
+    <label for="name">Name</label>
+    <input
+      type="text"
+      class="form-control"
+      id="name"
+      name="name"
+      placeholder="Enter name"
+    />
+  </div>
+  <div class="form-group">
+    <label for="location">Location</label>
+    <input
+      type="text"
+      class="form-control"
+      id="location"
+      name="location"
+      placeholder="Enter location"
+    />
+  </div>
+  <div class="form-group">
+    <label for="description">Description</label>
+    <textarea
+      class="form-control"
+      id="description"
+      name="description"
+      rows="3"
+      placeholder="Enter description"
+    ></textarea>
+  </div>
+  <button type="submit" class="btn btn-success">
+    <i class="fas fa-plus"></i> Add Greenroom
+  </button>
+</form>
+
+{% endblock %}

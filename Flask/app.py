@@ -1,16 +1,30 @@
-from flask import Flask, render_template
+from flask import Flask, render_template, request
 import paho.mqtt.client as mqtt
 from apscheduler.schedulers.background import BackgroundScheduler
 import os
 import json
 from decimal import Decimal
 from datetime import datetime
+import tempfile
+
+from dotenv import load_dotenv
+from AWSIoTPythonSDK.MQTTLib import AWSIoTMQTTClient
+# from firebase import firebase
+import firebase_admin
+from firebase_admin import credentials, storage
+
 
 # Currently this connects to local db
 import aws_rds_com as db
 
 from aws_rds_com import *
 
+CREDENTIALS = os.getenv("CREDENTIALS")
+FIREBASE_STORAGE = os.getenv("FIREBASE_STORAGE")
+cred = credentials.Certificate(CREDENTIALS)
+firebase_app = firebase_admin.initialize_app(cred, {
+        'storageBucket': FIREBASE_STORAGE
+    })
 app = Flask(__name__)
 
 # IP address may change each time broker is restarted
@@ -73,6 +87,17 @@ def index():
             temperature_chart_label.append(i["timestamp"])
             temperature_chart_data.append(i["value"])
             
+        current_water_level = get_record_greenroom(gr["greenroom_id"],True,"level")
+        # get the last one
+        if len(current_water_level) > 0:
+            current_water_level = current_water_level[0]["value"]
+            if current_water_level == "0":
+                current_water_level = True
+            else:
+                current_water_level = False
+        else:
+            current_water_level = False
+            
         greenrooms[greenrooms.index(gr)]["soil_chart_data"] = soil_chart_data
         greenrooms[greenrooms.index(gr)]["light_chart_data"] = light_chart_data
         greenrooms[greenrooms.index(gr)]["temperature_chart_data"] = temperature_chart_data
@@ -81,6 +106,8 @@ def index():
         greenrooms[greenrooms.index(gr)]["light_chart_label"] = light_chart_label
         greenrooms[greenrooms.index(gr)]["temperature_chart_label"] = temperature_chart_label
         
+        greenrooms[greenrooms.index(gr)]["water_level"] = current_water_level
+        
         
     data_template = {
         "greenroom": greenrooms,
@@ -88,6 +115,40 @@ def index():
     }
 
     return render_template('index.html', data=data_template)
+
+
+@app.route('/create_greenroom', methods=['GET', 'POST'])
+def create_greenroom():
+    
+    if request.method == 'POST':
+        
+        name = request.form.get("name")
+        location = request.form.get("location")
+        description = request.form.get("description")
+        
+        file = request.files['images']
+        
+
+       # Check if a file was submitted
+        if file:
+            # Create a reference to the Firebase Storage location where you want to store the image
+            storage_ref = storage.bucket().blob("greenroom_images/" + file.filename)
+            
+            # Upload the file to Firebase Storage
+            storage_ref.upload_from_string(file.read(), content_type=file.content_type)
+            
+            # Get the URL of the uploaded image
+            image_url = storage_ref.public_url
+            
+            # Create the greenroom in your database, including the image URL
+            create_greenroom(name, location, description, image_url)
+            
+            # Optionally, you can provide feedback to the user, e.g., by redirecting to a success page
+            # return render_template('success.html', image_url=image_url)
+    
+    return render_template('create_greenroom.html')
+
+
 
 @app.route('/greenroom-detail/<id>', methods=['GET', 'POST'])
 def page_greenroom_detail(id):
@@ -103,6 +164,7 @@ def page_greenroom_detail(id):
 
     greenroom = db.select_by_id(id)
     return render_template('greenroom-detail.html', greenroom=greenroom)
+
 
 # @app.route('/manual', methods=['GET', 'POST'])
 # # Template for publishing manual control messages through MQTT

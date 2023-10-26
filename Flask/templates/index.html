@@ -7,7 +7,7 @@
 {% endblock %} {% block content %}
 <div class="d-flex flex-row">
   <div class="h1">Dashboard</div>
-  <a href="/">
+  <a href="/create_greenroom">
     <button type="button" class="btn btn-success">
       <i class="fas fa-plus"></i> Add Greenroom
     </button>
@@ -53,7 +53,16 @@
 <div class="row">
   {% for gr in data.greenroom %}
   <a class="card-link" href="{{ url_for('page_greenroom_detail', id=gr.id) }}">
-    <div class="card greenroom-container p-1">
+    <div
+      class="card greenroom-container p-1 {% if gr.water_level %} border-danger border-5 {% endif %}"
+    >
+      <!-- ! icon -->
+      {% if gr.water_level %}
+      <p class="text-center text-danger">
+        <i class="fas fa-exclamation-triangle fa-1x text-danger"></i> Low water
+        level
+      </p>
+      {% endif %}
       <div class="d-flex">
         <img
           class="card-img-top w-25 h-25"

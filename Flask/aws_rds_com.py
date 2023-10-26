@@ -110,6 +110,13 @@ def get_greenroom_all():
         
     return result_list
 
+def create_greenroom(name, location, description,image_url):
+    conn = connect_db()
+    cursor = conn.cursor()
+    sql = "INSERT INTO greenroom (name, location, description, image) VALUES (%s, %s, %s)"
+    param = (name, location, description,image_url,)
+    cursor.execute(sql, param)
+    conn.commit()
 # def select_by_id(id:int):
 #     conn = connect_db()
 #     cursor = conn.cursor()
