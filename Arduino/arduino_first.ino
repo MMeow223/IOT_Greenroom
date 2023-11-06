@@ -10,9 +10,13 @@ const int LED1 = 9;
 const int LED2 = 10;
 const int LED3 = 11;
 
+const int Level1 = 350; 
+const int Level2 = 200; 
+const int Level3 = 100; 
+
 // Auto temperature system pin
 const int FAN = 3;
-const int TEMPthreshold = 25;
+const int TEMPthreshold = 30;
 
 // Auto watering system pin
 int soil;
@@ -34,8 +38,7 @@ int nutrientPump_mode = AUTO;
 
 void setup() {
   Serial.begin(9600);
-  
-  // Configure pins as inputs or outputs
+
   pinMode(photoresistor, INPUT);
   pinMode(LED1, OUTPUT);
   pinMode(LED2, OUTPUT);
@@ -55,7 +58,6 @@ void setup() {
 }
 
 void loop() {
-  // Check for Serial Input
   if (Serial.available()) {
     int command = Serial.parseInt();
 
@@ -128,53 +130,37 @@ void loop() {
     }
   }
 
-  // If in AUTO mode, handle the logic for LED1, LED2/LED3, Fan, Pump
+  // Light Control Logic
+  int lightValue = analogRead(photoresistor);
+  Serial.print("Light Value: ");
+  Serial.println(lightValue);
 
-// If in AUTO mode, handle the logic for LED1, LED2/LED3
-
-int lightValue = analogRead(photoresistor);
-Serial.print("Light Value: ");
-Serial.println(lightValue);
-
-if (LED1_mode == AUTO) {
-    if (lightValue < 100) {
-        digitalWrite(LED1, LOW);
-        digitalWrite(LED2, HIGH);
-        digitalWrite(LED3, HIGH);
-    } else if (lightValue < 250) {
-        digitalWrite(LED1, HIGH);
-        digitalWrite(LED2, LOW);
-        digitalWrite(LED3, LOW);
-    } else if (lightValue < 500) {
-        digitalWrite(LED1, LOW);
-        digitalWrite(LED2, LOW);
-        digitalWrite(LED3, LOW);
+  // LED1 control
+  if (LED1_mode == AUTO) {
+    if (lightValue > Level2 && lightValue < Level1) {
+      digitalWrite(LED1, LOW);
+    } else if (lightValue < Level2 && lightValue > Level3)
+      digitalWrite(LED1, HIGH);    
+    else if (lightValue < Level3) {
+      digitalWrite(LED1, LOW);
     } else {
-        digitalWrite(LED1, HIGH);
-        digitalWrite(LED2, HIGH);
-        digitalWrite(LED3, HIGH);
+      digitalWrite(LED1, HIGH);
     }
-}
+  }
 
-if (LED2_LED3_mode == AUTO) {
-    if (lightValue < 150) {
-        digitalWrite(LED1, LOW);
-        digitalWrite(LED2, LOW);
-        digitalWrite(LED3, LOW);
-    } else if (lightValue < 250) {
-        digitalWrite(LED1, HIGH);
-        digitalWrite(LED2, LOW);
-        digitalWrite(LED3, LOW);
-    } else if (lightValue < 500) {
-        digitalWrite(LED1, LOW);
-        digitalWrite(LED2, HIGH);
-        digitalWrite(LED3, HIGH);
+  // LED2 and LED3 control
+  if (LED2_LED3_mode == AUTO) {
+    if (lightValue < Level1 && lightValue > Level2) {
+      digitalWrite(LED2, HIGH);
+      digitalWrite(LED3, HIGH);
+    } else if (lightValue < Level2) {
+      digitalWrite(LED2, LOW);
+      digitalWrite(LED3, LOW);
     } else {
-        digitalWrite(LED1, HIGH);
-        digitalWrite(LED2, HIGH);
-        digitalWrite(LED3, HIGH);
+      digitalWrite(LED2, HIGH);
+      digitalWrite(LED3, HIGH);
     }
-}
+  }
 
   // Fan
   if (FAN_mode == AUTO) {
@@ -182,9 +168,9 @@ if (LED2_LED3_mode == AUTO) {
     Serial.print("Temperature  (C): ");
     Serial.println((float)DHT11.temperature, 2);
     if(DHT11.temperature > TEMPthreshold) {
-      digitalWrite(FAN, HIGH); // Turn on the fan
+      digitalWrite(FAN, HIGH); 
     } else {
-      digitalWrite(FAN, LOW);  // Turn off the fan
+      digitalWrite(FAN, LOW);  
     }
   }
 
