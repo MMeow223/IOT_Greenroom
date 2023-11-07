@@ -106,6 +106,7 @@ void loop() {
       switch (command) {
         case 101:
           Measure = true;
+          break;
       }
   }
 
