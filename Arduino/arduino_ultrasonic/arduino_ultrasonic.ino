@@ -129,7 +129,7 @@ void loop() {
       sensorPosition += distance;
     } else {
 
-      Serial.print("Plant Height: ");
+      Serial.print("height:");
       Serial.println(plantHeight);
 
       motorCycle(-(sensorPosition), 10);

@@ -132,8 +132,9 @@ void loop() {
 
   // Light Control Logic
   int lightValue = analogRead(photoresistor);
-  Serial.print("Light Value: ");
+  Serial.print("light:");
   Serial.println(lightValue);
+  Serial.print("|");
 
   // LED1 control
   if (LED1_mode == AUTO) {
@@ -165,8 +166,10 @@ void loop() {
   // Fan
   if (FAN_mode == AUTO) {
     int chk = DHT11.read(DHT11PIN);
-    Serial.print("Temperature  (C): ");
+    Serial.print("temperature:");
     Serial.println((float)DHT11.temperature, 2);
+    Serial.print("|");
+
     if(DHT11.temperature > TEMPthreshold) {
       digitalWrite(FAN, HIGH); 
     } else {
@@ -177,8 +180,9 @@ void loop() {
   // waterPump
   if (waterPump_mode == AUTO) {
     soil = digitalRead(soilMoisture);
-    Serial.print("Soil: ");
+    Serial.print("soil:");
     Serial.println(soil);
+    Serial.print("|");
     if (soil == HIGH) {
       digitalWrite(waterPump, LOW);
     } else {
@@ -189,8 +193,9 @@ void loop() {
   //nutrientPump
     if (nutrientPump_mode == AUTO) {
     water = digitalRead(waterLevel);
-    Serial.print("Water Level: ");
-    Serial.println(water);
+    Serial.print("water_level:");
+    Serial.print(water);
+    Serial.print("|");
     if (water == HIGH) {
       digitalWrite(nutrientPump, LOW);
     } else {
