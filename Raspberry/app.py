@@ -21,7 +21,8 @@ AWS_PORT = os.getenv("AWS_PORT")
 AWS_ROOT_CA = os.getenv("AWS_ROOT_CA")
 AWS_PRIVATE_KEY = os.getenv("AWS_PRIVATE_KEY")
 AWS_CERTIFICATE = os.getenv("AWS_CERTIFICATE")
-PORT = os.getenv("PORT")
+PORT1 = os.getenv("PORT1")
+PORT2 = os.getenv("PORT2")
 BAUDRATE = os.getenv("BAUDRATE")
 CREDENTIALS = os.getenv("CREDENTIALS")
 FIREBASE_STORAGE = os.getenv("FIREBASE_STORAGE")
@@ -75,7 +76,8 @@ def firebase_storage(bucket_dir, image_path):
 
 
 def arduino_connection():
-    arduino = serial.Serial(PORT, BAUDRATE)
+    arduino_1 = serial.Serial(PORT1, BAUDRATE)
+    arduino_2 = serial.Serial(PORT2, BAUDRATE)
 
 
 def aws_iot_connection():
