@@ -50,7 +50,7 @@
         <button
           type="submit"
           class="btn btn-primary"
-          name="nutrient"
+          name="water_act"
           id="nutrient_on"
           value="1"
         >
@@ -64,7 +64,7 @@
         <button
           type="submit"
           class="btn btn-primary"
-          name="nutrient"
+          name="water_act"
           id="nutrient_off"
           value="0"
         >
@@ -75,7 +75,7 @@
         <button
           type="submit"
           class="btn btn-primary"
-          name="nutrient"
+          name="water_act"
           id="nutrient_on"
           value="1"
           disabled
@@ -91,12 +91,15 @@
 
     <form method="post">
       <div class="form-group">
-        <p class="form-title">Water Pump</p>
+        <div class="form-heading">
+          <span class="form-title">Water Pump</span>
+          <span class="actuator_mode">{{greenroom.moisture_mode}}</span>
+        </div>
         {% if greenroom.moisture_action == "0" %}
         <p>Water Pump last activated on {{greenroom.moisture_timestamp}}</p>
         <button
           type="submit"
-          name="water"
+          name="soil_act"
           class="btn btn-primary"
           id="water_on"
           value="1"
@@ -110,7 +113,7 @@
         </p>
         <button
           type="submit"
-          name="water"
+          name="soil_act"
           class="btn btn-primary"
           id="water_off"
           value="0"
@@ -123,7 +126,10 @@
 
     <form method="post">
       <div class="form-group">
-        <p class="form-title">Growth Light</p>
+        <div class="form-heading">
+          <span class="form-title">Growth Light</span>
+          <span class="actuator_mode">{{greenroom.light_mode}}</span>
+        </div>
         {% if greenroom.light_action == "0" %}
         <p>Growth light last activated on {{greenroom.light_timestamp}}</p>
         {% else %}
@@ -131,16 +137,16 @@
           Growth light currently activated at Brightness Level
           {{greenroom.light_action}}
         </p>
-        {% endif %} <input type="radio" name="light" id="light_off" value="0" {%
+        {% endif %} <input type="radio" name="light_act" id="light_off" value="0" {%
         if greenroom.light_action == '0' %} checked {% endif %} >
         <label for="light_off">Off</label><br />
-        <input type="radio" name="light" id="light_one" value="1" {% if
+        <input type="radio" name="light_act" id="light_one" value="1" {% if
         greenroom.light_action == '1' %} checked {% endif %} >
         <label for="light_one">Brightness Level 1</label><br />
-        <input type="radio" name="light" id="light_two" value="2" {% if
+        <input type="radio" name="light_act" id="light_two" value="2" {% if
         greenroom.light_action == '2' %} checked {% endif %} >
         <label for="light_two">Brightness Level 2</label><br />
-        <input type="radio" name="light" id="light_three" value="3" {% if
+        <input type="radio" name="light_act" id="light_three" value="3" {% if
         greenroom.light_action == '3' %} checked {% endif %} >
         <label for="light_three">Brightness Level 3</label><br />
       </div>
@@ -149,12 +155,15 @@
 
     <form method="post">
       <div class="form-group">
-        <p class="form-title">Fan</p>
+        <div class="form-heading">
+          <span class="form-title">Fan</span>
+          <span class="actuator_mode">{{greenroom.temperature_mode}}</span>
+        </div>
         {% if greenroom.temperature_action == "0" %}
         <p>Fan last activated on {{greenroom.temperature_timestamp}}</p>
         <button
           type="submit"
-          name="fan"
+          name="temp_act"
           class="btn btn-primary"
           id="fan_on"
           value="1"
@@ -165,7 +174,7 @@
         <p>Fan is currently on</p>
         <button
           type="submit"
-          name="fan"
+          name="temp_act"
           class="btn btn-primary"
           id="fan_off"
           value="0"

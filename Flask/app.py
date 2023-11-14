@@ -1,5 +1,4 @@
 from flask import Flask, render_template, request
-import paho.mqtt.client as mqtt
 from apscheduler.schedulers.background import BackgroundScheduler
 import os
 import json
@@ -7,18 +6,22 @@ from decimal import Decimal
 from datetime import datetime
 import tempfile
 
-# from dotenv import load_dotenv
-# from AWSIoTPythonSDK.MQTTLib import AWSIoTMQTTClient
+from AWSIoTPythonSDK.MQTTLib import AWSIoTMQTTClient
+
 # from firebase import firebase
 import firebase_admin
 from firebase_admin import credentials, storage
 
-
-# Currently this connects to local db
-import aws_rds_com as db
-
 from aws_rds_com import *
+from dotenv import load_dotenv
 
+AWS_CLIENT = os.getenv("AWS_CLIENT")
+AWS_ENDPOINT = os.getenv("AWS_ENDPOINT")
+AWS_ROOT_CA = os.getenv("AWS_ROOT_CA")
+AWS_PRIVATE_KEY = os.getenv("AWS_PRIVATE_KEY")
+AWS_CERTIFICATE = os.getenv("AWS_CERTIFICATE")
+
+load_dotenv()
 CREDENTIALS = os.getenv("CREDENTIALS")
 FIREBASE_STORAGE = os.getenv("FIREBASE_STORAGE")
 cred = credentials.Certificate(CREDENTIALS)
@@ -27,41 +30,61 @@ firebase_app = firebase_admin.initialize_app(cred, {
     })
 app = Flask(__name__)
 
-# IP address may change each time broker is restarted
-# MQTT_SERVER = "172.20.10.4"
-# actuator_topic = 'actuator'
-# scheduler_topic = "scheduler"
-# sensor_topic = "sensor"
-# port = 5000
+actuator_topic = "actuator"
+scheduler_topic = "scheduler"
+sensor_topic = "sensor"
 
-# def on_connect(client, userdata, flags, rc):
-#     client.publish(actuator_topic, "STARTING SERVER")
-#     client.publish(actuator_topic, "CONNECTED")
-#     client.subscribe(sensor_topic)
+dict = {
+    "light:0" : "30",
+    "light:1" : "1",
+    "light:2" : "2",
+    "light:3" : "3",
+    "fan:0" : "40",
+    "fan:1" : "4",
+    "water:0" : "50",
+    "water:1" : "5",
+    "nutrient:0" : "60",
+    "nutrient:1" : "6",
+    "read" : "999"
+}
 
+myMQTTClient = None
+def aws_iot_connection():
 
-# def on_message(client, userdata, msg):
-#     payload = str(msg.payload, encoding='utf-8')
-#     print(payload)
-#     splitStr = payload.split(":")
-#     print(splitStr)
-#     secondSplit = splitStr[1].split(";")
-#     print(secondSplit)
-#     match splitStr[0]:
-#         case "Water":
-#             db.insert_sensor_by_type("moisture", secondSplit[0], secondSplit[1])
-#         case "Light Value":
-#             db.insert_sensor_by_type("light", secondSplit[0], secondSplit[1])
-#         case "Temperature":
-#             db.insert_sensor_by_type("temperature", secondSplit[0], secondSplit[1])
-#         case "level":
-#             db.insert_sensor_by_type("level", secondSplit[0], secondSplit[1])
-#         case "Growth Light":
-#             db.insert_actuator_by_type("light", secondSplit[0], secondSplit[1])
-#         case "Water Pump":
-#             db.insert_actuator_by_type("water", secondSplit[0], secondSplit[1])
-#         case "Fan":
-#             db.insert_actuator_by_type("fan", secondSplit[0], secondSplit[1])
+    # AWS IoT certificate based connection
+    myMQTTClient.configureEndpoint(AWS_ENDPOINT, 8883)
+    myMQTTClient.configureCredentials(AWS_ROOT_CA, AWS_PRIVATE_KEY, AWS_CERTIFICATE)
+    # Infinite offline Publish queueing
+    myMQTTClient.configureOfflinePublishQueueing(-1)
+    myMQTTClient.configureDrainingFrequency(2)  # Draining: 2 Hz
+    myMQTTClient.configureConnectDisconnectTimeout(10)  # 10 sec
+    myMQTTClient.configureMQTTOperationTimeout(5)  # 5 sec
+    # connect and publish
+    myMQTTClient.connect()
+    subscribe_topic()
+
+def subscribe_topic():
+    myMQTTClient.subscribe(sensor_topic, 1, on_message)
+
+# Messages from Arduino -> PI -> Cloud, expect the format of "table_type!data_type:value;greenroom_id"
+def on_message(client, userdata, message):
+    payload = message.payload.decode()
+    splitStr = payload.split("!")
+    secondSplit = splitStr[1].split(":")
+    thirdSplit = secondSplit[1].split(";")
+
+    table_type = splitStr[0]
+    data_type = secondSplit[0]
+    value = thirdSplit[0]
+    greenroom_id = thirdSplit[1]
+
+    if table_type == "act":
+        insert_activity(data_type, value, greenroom_id)
+    elif table_type == "sensor":
+        insert_sensor(data_type, value, greenroom_id)
+    elif table_type == "mode":
+        update_mode(data_type, value, greenroom_id)
+
 
 @app.route('/')
 def index():
@@ -150,27 +173,35 @@ def create_greenroom_page():
 
 @app.route('/greenroom-detail/<id>', methods=['GET', 'POST'])
 def page_greenroom_detail(id):
-    all_param = ["nutrient", "water", "light", "fan"]
+    CONVERSION = {
+        'temp_act' : "temp_mode",
+        'light_act' : "light_mode",
+        'air_act' : "air_mode",
+        'soil_act' : "soil_mode",
+        'water_act' : "water_mode"
+    }
+    all_param = ["water_act", "soil_act", "light_act", "temp_act"]
     for param in all_param:
-        # Get the posted value
         value = request.form.get(param)
         if value != None:
             msg = f"{param}:{value}"
             print(msg)
-            db.insert_actuator_by_type(param,value,id)
-            # client.publish(actuator_topic, msg)
+            insert_activity(param,value,id)
+            if(param != "water_act"):
+                update_mode(CONVERSION[param], "manual", id)
+            myMQTTClient.publish(actuator_topic, msg)
 
-    greenroom = db.get_record_greenroom_all_actuator_one(id,True)
-    for i in get_record_greenroom(id,True,"soil_moisture"):
+    greenroom = get_record_greenroom_all_actuator_one(id)
+    for i in get_record_greenroom(id,type="soil_moisture"):
         greenroom["moisture"] = i["value"]
         
-    for i in get_record_greenroom(id,True,"light"):
+    for i in get_record_greenroom(id,type="light"):
         greenroom["light"] = i["value"]
         
-    for i in get_record_greenroom(id,True,"temperature"):
+    for i in get_record_greenroom(id,type="temperature"):
         greenroom["temperature"] = i["value"]
         
-    current_water_level = get_record_greenroom(id,True,"level")
+    current_water_level = get_record_greenroom(id,type="level")
     # get the last one
     if len(current_water_level) > 0:
         current_water_level = str(current_water_level[0]["value"])
@@ -186,34 +217,12 @@ def page_greenroom_detail(id):
     
     greenroom["name"] = get_greenroom(id)[0]["name"]
     greenroom["image"] = get_greenroom(id)[0]["image"]
-    
-    # all_greenroom = db.get_greenroom_all()
-    # greenroom_name = ""
-    
-    # for gr in all_greenroom:
-    #     if gr["greenroom_id"] == id:
-    #         greenroom_name = gr["name"]
-    # greenroom["name"] = greenroom_name
+
+    greenroom.update(get_record_greenroom_all_actuator_mode_one(id))
     
     print(greenroom)
 
     return render_template('greenroom-detail.html', greenroom=greenroom)
-
-
-# @app.route('/manual', methods=['GET', 'POST'])
-# # Template for publishing manual control messages through MQTT
-# def manual_control():
-#     # Defines all the name of "modules" to loop through (the name should match the "name" attr in form)
-#     all_param = ["nutrient", "light"]
-#     for param in all_param:
-#         # Get the posted value
-#         value = request.form.get(param)
-#         if value != None:
-#             msg = f"{param}:{value}"
-#             print(msg)
-#             client.publish(actuator_topic, msg)
-
-#     return render_template('manual_control.html')
 
 @app.route('/analysis')
 def analysis():
@@ -224,12 +233,8 @@ def analysis():
 #     client.publish(scheduler_topic, "read")
 
 if __name__ == '__main__':
-    # client = mqtt.Client()
-    # #client.username_pw_set(username, password)
-    # client.on_connect = on_connect
-    # client.on_message = on_message
-    # client.connect(MQTT_SERVER)
-    # client.loop_start()
+    myMQTTClient = AWSIoTMQTTClient(AWS_CLIENT)
+    aws_iot_connection()
 
     # scheduler = BackgroundScheduler()
     # scheduler.add_job(scheduler_read_sensor, 'interval', minutes=15)

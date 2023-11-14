@@ -15,7 +15,7 @@ def connect_db():
     connection = mysql.connector.connect(
         host="localhost",
         user="root",
-        password="",
+        password="password",
         database="iot_greenroom"
     )
     return connection
@@ -187,112 +187,95 @@ def get_record_greenroom_all_actuator_one(greenroom_id, today=False):
         
     return result_dict
 
-# def select_by_id(id:int):
-#     conn = connect_db()
-#     cursor = conn.cursor()
+def get_record_greenroom_all_actuator_mode_one(greenroom_id, today=False):
+    ACTUATOR_MODE_CONVERSION = {
+        'temperature_actuator_mode' : 'temperature_mode',
+        'light_actuator_mode' : 'light_mode',
+        'soil_moisture_actuator_mode' : 'moisture_mode'
+    }
 
-#     sql = "SELECT name FROM greenroom WHERE id = %s LIMIT 1"
-#     param = (id,)
-#     cursor.execute(sql, param)
-#     result = cursor.fetchone()
+    result_dict = {}
+    table_name = [
+        'temperature_actuator_mode',
+        'light_actuator_mode',
+        'soil_moisture_actuator_mode',
+    ]
 
-#     gr = {
-#         "id" : id,
-#         "name" : result[0]
-#     }
+    conn = connect_db()
+    cursor = conn.cursor()
 
-#     sql = "SELECT reading,time FROM sensor WHERE type = 'level' AND greenroom = %s ORDER BY time DESC LIMIT 1"
-#     param = (id,)
-#     cursor.execute(sql, param)
-#     result = cursor.fetchone()
-#     if result[0] == "0":
-#         gr["nutrientLow"] = True
-#     else:
-#         gr["nutrientLow"] = False
+    for t in table_name:
+        sql = "SELECT mode FROM `"+t+"` WHERE greenroom_id = %s AND timestamp >= %s ORDER BY timestamp DESC LIMIT 1"
 
-#     sql = "SELECT reading,time FROM sensor WHERE type = 'light' AND greenroom = %s ORDER BY time DESC LIMIT 1"
-#     param = (id,)
-#     cursor.execute(sql, param)
-#     result = cursor.fetchone()
-#     gr["light"] = result[0]
-
-#     sql = "SELECT reading,time FROM sensor WHERE type = 'moisture' AND greenroom = %s ORDER BY time DESC LIMIT 1"
-#     param = (id,)
-#     cursor.execute(sql, param)
-#     result = cursor.fetchone()
-#     gr["moisture"] = result[0]
-
-#     sql = "SELECT reading,time FROM sensor WHERE type = 'temperature' AND greenroom = %s ORDER BY time DESC LIMIT 1"
-#     param = (id,)
-#     cursor.execute(sql, param)
-#     result = cursor.fetchone()
-#     gr["temperature"] = result[0]
-
-#     sql = "SELECT status,time FROM actuator WHERE type = 'nutrient' AND greenroom = %s ORDER BY time DESC LIMIT 1"
-#     param = (id,)
-#     cursor.execute(sql, param)
-#     result = cursor.fetchone()
-#     gr["nutrientStatus"] = result[0]
-#     if(result[0] == "1"):
-#         gr["nutrientTime"] = result[1] + timedelta(minutes=5)
-#     else:
-#         gr["nutrientTime"] = result[1]
-    
-
-#     sql = "SELECT status,time FROM actuator WHERE type = 'light' AND greenroom = %s ORDER BY time DESC LIMIT 1"
-#     param = (id,)
-#     cursor.execute(sql, param)
-#     result = cursor.fetchone()
-#     gr["lightStatus"] = result[0]
-#     gr["lightTime"] = result[1]
-
-#     sql = "SELECT status,time FROM actuator WHERE type = 'water' AND greenroom = %s ORDER BY time DESC LIMIT 1"
-#     param = (id,)
-#     cursor.execute(sql, param)
-#     result = cursor.fetchone()
-#     gr["waterStatus"] = result[0]
-#     if(result[0] == "1"):
-#         gr["waterTime"] = result[1] + timedelta(minutes=4)
-#     else:
-#         gr["waterTime"] = result[1]
-
-#     sql = "SELECT status,time FROM actuator WHERE type = 'fan' AND greenroom = %s ORDER BY time DESC LIMIT 1"
-#     param = (id,)
-#     cursor.execute(sql, param)
-#     result = cursor.fetchone()
-#     gr["fanStatus"] = result[0]
-#     gr["fanTime"] = result[1]
-
-#     return gr
-
-# def init_db():
-#     conn = connect_db()
-#     cursor = conn.cursor()
-#     cursor.execute("SELECT id FROM greenroom")
-#     result = cursor.fetchall()
-    
-#     greenroom = []
-#     for r in result:
-#         gr = select_by_id(r[0])
-#         greenroom.append(gr)
+        if today:
+            # equal to 0:00:00 today
+            date = datetime.now() - timedelta(days=1)
+            # now = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+        else:
+            # start from year 2023
+            date = datetime(2023, 1, 1)
+            
+        param = (greenroom_id, date,)
+        cursor.execute(sql, param)
+        result = cursor.fetchone()
         
-#     print(greenroom)
+        param_action = ACTUATOR_MODE_CONVERSION[t]
+        # param_timestamp = ACTUATOR_MODE_CONVERSION[t]+"_timestamp"
 
-#     return greenroom
+        if result != None :
+            result_dict[param_action] = result[0]
+            # result_dict[param_timestamp] = result[1].strftime('%Y-%m-%d %H:%M:%S')  # Format datetime as string        
+        
+    return result_dict
 
-# def insert_sensor_by_type(type:str, reading:str, id:int):
-#     conn = connect_db()
-#     cursor = conn.cursor()
-#     sql = "INSERT INTO sensor (type,reading,greenroom) VALUES (%s,%s,%s)"
-#     param = (type, reading, id,)
-#     cursor.execute(sql, param)
-#     conn.commit()
+def insert_activity(type:str, action:str, greenroom_id:int):
+    CONVERSION = {
+        'temp_act' : "temperature_actuator_activity",
+        'light_act' : "light_actuator_activity",
+        'air_act' : "air_moisture_actuator_activity",
+        'soil_act' : "soil_moisture_actuator_activity",
+        'water_act' : "water_level_actuator_activity"
+    }
 
-# def insert_actuator_by_type(type:str, status:str, id:int):
-#     conn = connect_db()
-#     cursor = conn.cursor()
-#     sql = "INSERT INTO actuator (type,status,greenroom) VALUES (%s,%s,%s)"
-#     param = (type, status, id,)
-#     cursor.execute(sql, param)
-#     conn.commit()
+    conn = connect_db()
+    cursor = conn.cursor()
+    table = CONVERSION[type]
+    sql = "INSERT INTO `"+table+"` (action,greenroom_id) VALUES (%s,%s)"
+    param = (action, greenroom_id)
+    cursor.execute(sql, param)
+    conn.commit()
+
+def insert_sensor(type:str, value:float, greenroom_id:int):
+    CONVERSION = {
+        'temp_sensor' : "temperature_sensor",
+        'light_sensor' : "light_sensor",
+        'air_sensor' : "air_moisture_sensor",
+        'soil_sensor' : "soil_moisture_sensor",
+        'water_sensor' : "water_level_sensor"
+    }
+
+    conn = connect_db()
+    cursor = conn.cursor()
+    table = CONVERSION[type]
+    sql = "INSERT INTO `"+table+"` (value,greenroom_id) VALUES (%s,%s)"
+    param = (value, greenroom_id)
+    cursor.execute(sql, param)
+    conn.commit()
+
+def update_mode(type:str, mode:str, greenroom_id:int):
+    CONVERSION = {
+        'temp_mode' : "temperature_actuator_mode",
+        'light_mode' : "light_actuator_mode",
+        'air_mode' : "air_moisture_actuator_mode",
+        'soil_mode' : "soil_moisture_actuator_mode",
+        'water_mode' : "water_level_actuator_mode"
+    }
+
+    conn = connect_db()
+    cursor = conn.cursor()
+    table = CONVERSION[type]
+    sql = "UPDATE `"+table+"` SET mode = %s WHERE greenroom_id = %s"
+    param = (mode, greenroom_id)
+    cursor.execute(sql, param)
+    conn.commit()
     

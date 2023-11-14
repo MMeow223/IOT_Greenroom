@@ -37,10 +37,6 @@
     
 }
 
-.alert{
-    margin-top: 15px;
-}
-
 /* The switch - the box around the slider */
 .switch {
     position: relative;
@@ -114,4 +110,16 @@ form{
 .form-title{
     font-weight: 500;
     font-size: 30px;
+}
+
+.actuator_mode{
+    text-align: center;
+    border: 2px solid black;
+    border-radius: 8px;
+    padding: 6px 18px 10px 18px;
+    margin-left: 20px;
+}
+
+.form-heading{
+    margin-bottom: 10px;
 }
