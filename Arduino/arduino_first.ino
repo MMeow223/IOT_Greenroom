@@ -30,11 +30,16 @@ const int nutrientPump = 8;
 const int AUTO = 0;
 const int MANUAL = 1;
 
+// Nutrient pump variables
+bool nutrientPumpOn = false;
+long int nutrientPumpStartTime = millis();
+long int nutrientPumpScheduledTime = millis();
+int nutrientPumpCounter = 0;
+
 int LED1_mode = AUTO;
 int LED2_LED3_mode = AUTO;
 int FAN_mode = AUTO;
 int waterPump_mode = AUTO;
-int nutrientPump_mode = AUTO;
 
 void setup() {
   Serial.begin(9600);
@@ -67,7 +72,6 @@ void loop() {
         LED2_LED3_mode = AUTO;
         FAN_mode = AUTO;
         waterPump_mode = AUTO;
-        nutrientPump_mode = AUTO;
         break;
       case 1:
         LED1_mode = MANUAL;
@@ -118,11 +122,9 @@ void loop() {
         digitalWrite(waterPump, HIGH);
         break;
       case 6:
-        nutrientPump_mode = MANUAL;
         digitalWrite(nutrientPump, LOW);
         break;
       case 60:
-        nutrientPump_mode = MANUAL;
         digitalWrite(nutrientPump, HIGH);
         break;
       default:
@@ -186,17 +188,42 @@ void loop() {
     }
   }
   
-  //nutrientPump
-    if (nutrientPump_mode == AUTO) {
-    water = digitalRead(waterLevel);
-    Serial.print("Water Level: ");
-    Serial.println(water);
-    if (water == HIGH) {
-      digitalWrite(nutrientPump, LOW);
-    } else {
-      digitalWrite(nutrientPump, HIGH);
-    }
-  }
+  NutrientPumpLoop();
 
   delay(500);
+}
+
+void NutrientPumpLoop(){
+    water = digitalRead(waterLevel);
+
+    if(water == 1){
+        if(nutrientPumpCounter > 0 && millis() >= nutrientPumpScheduledTime){
+            startNutrientPump();
+        }
+
+        if(nutrientPumpOn){
+            long int currentTime = millis();
+            if(currentTime - nutrientPumpStartTime >= 1000){
+                stopNutrientPump();
+            }
+        }
+    }else{
+        stopNutrientPump();
+        nutrientPumpCounter = 0;
+    }
+
+}
+
+void startNutrientPump(){
+  nutrientPumpOn = true;
+  nutrientPumpStartTime = millis();
+  nutrientPumpScheduledTime = millis() + 120000;
+  nutrientPumpCounter -= 1;
+
+  digitalWrite(nutrientPump, LOW);
+}
+
+void stopNutrientPump(){
+  nutrientPumpOn = false;
+  digitalWrite(nutrientPump, HIGH);
 }
