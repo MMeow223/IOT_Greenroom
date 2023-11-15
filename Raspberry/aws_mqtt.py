@@ -14,12 +14,14 @@ AWS_PORT = os.getenv("AWS_PORT")
 AWS_ROOT_CA = os.getenv("AWS_ROOT_CA")
 AWS_PRIVATE_KEY = os.getenv("AWS_PRIVATE_KEY")
 AWS_CERTIFICATE = os.getenv("AWS_CERTIFICATE")
-PORT = os.getenv("PORT")
+PORT1 = os.getenv("PORT1")
+PORT2 = os.getenv("PORT2")
 BAUDRATE = os.getenv("BAUDRATE")
 CREDENTIALS = os.getenv("CREDENTIALS")
 FIREBASE_STORAGE = os.getenv("FIREBASE_STORAGE")
 
-arduino = None
+arduino_1 = None
+arduino_2 = None
 actuator_topic = "actuator"
 scheduler_topic = "scheduler"
 sensor_topic = "sensor"
@@ -63,16 +65,16 @@ def on_message_received(client, userdata, message):
     topic = message.topic
     if topic == "actuator":
         print("Received--"+payload)
-        if(arduino != None):
-            if(arduino.isOpen == False):
-                arduino.open()
-            arduino.write(dict[payload].encode())
+        if(arduino_1 != None):
+            if(arduino_1.isOpen == False):
+                arduino_1.open()
+            arduino_1.write(dict[payload].encode())
     elif topic == "scheduler":
         print("Received--"+payload)
-        if(arduino != None):
-            if(arduino.isOpen == False):
-                arduino.open()
-            arduino.write(dict[payload].encode())
+        if(arduino_1 != None):
+            if(arduino_1.isOpen == False):
+                arduino_1.open()
+            arduino_1.write(dict[payload].encode())
             
 
 def publish_topic():
@@ -85,23 +87,23 @@ def subscribe_topic():
     print("Subscribe successful")
 
 def arduino_connection():
-    arduino = serial.Serial(PORT, BAUDRATE)
-    return arduino
+    arduino_1 = serial.Serial(PORT1, BAUDRATE)
+    arduino_2 = serial.Serial(PORT2, BAUDRATE)
 
 def read_arduino_serial():
-    if(arduino != None):
-        while arduino.in_waiting > 0:
-            line = arduino.readline().decode('utf-8').rstrip()
+    if(arduino_1 != None):
+        while arduino_1.in_waiting > 0:
+            line = arduino_1.readline().decode('utf-8').rstrip()
             line = line + ";1"
             print(line)
             myMQTTClient.publish(sensor_topic, line, 1)
 
 def schedule_read_sensor():
     def scheduler_job():
-        if(arduino != None):
-            if(arduino.isOpen == False):
-                arduino.open()
-            arduino.write(dict["read"].encode())
+        if(arduino_1 != None):
+            if(arduino_1.isOpen == False):
+                arduino_1.open()
+            arduino_1.write(dict["read"].encode())
     scheduler = BackgroundScheduler()
     scheduler.add_job(scheduler_job, 'interval', minutes=15)
     scheduler.start()
