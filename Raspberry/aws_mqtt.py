@@ -87,6 +87,7 @@ def subscribe_topic():
     print("Subscribe successful")
 
 def arduino_connection():
+    global arduino_1, arduino_2
     arduino_1 = serial.Serial(PORT1, BAUDRATE)
     arduino_2 = serial.Serial(PORT2, BAUDRATE)
 
