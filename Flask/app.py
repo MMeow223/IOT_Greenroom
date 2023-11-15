@@ -34,20 +34,6 @@ actuator_topic = "actuator"
 scheduler_topic = "scheduler"
 sensor_topic = "sensor"
 
-dict = {
-    "light:0" : "30",
-    "light:1" : "1",
-    "light:2" : "2",
-    "light:3" : "3",
-    "fan:0" : "40",
-    "fan:1" : "4",
-    "water:0" : "50",
-    "water:1" : "5",
-    "nutrient:0" : "60",
-    "nutrient:1" : "6",
-    "read" : "999"
-}
-
 myMQTTClient = None
 def aws_iot_connection():
 
@@ -173,22 +159,15 @@ def create_greenroom_page():
 
 @app.route('/greenroom-detail/<id>', methods=['GET', 'POST'])
 def page_greenroom_detail(id):
-    CONVERSION = {
-        'temp_act' : "temp_mode",
-        'light_act' : "light_mode",
-        'air_act' : "air_mode",
-        'soil_act' : "soil_mode",
-        'water_act' : "water_mode"
-    }
-    all_param = ["water_act", "soil_act", "light_act", "temp_act"]
+    all_param = ["water", "soil", "light", "temp"]
     for param in all_param:
         value = request.form.get(param)
         if value != None:
             msg = f"{param}:{value}"
             print(msg)
             insert_activity(param,value,id)
-            if(param != "water_act"):
-                update_mode(CONVERSION[param], "manual", id)
+            if(param != "water"):
+                update_mode(param, "manual", id)
             myMQTTClient.publish(actuator_topic, msg)
 
     greenroom = get_record_greenroom_all_actuator_one(id)

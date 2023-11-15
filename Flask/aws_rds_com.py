@@ -230,11 +230,11 @@ def get_record_greenroom_all_actuator_mode_one(greenroom_id, today=False):
 
 def insert_activity(type:str, action:str, greenroom_id:int):
     CONVERSION = {
-        'temp_act' : "temperature_actuator_activity",
-        'light_act' : "light_actuator_activity",
-        'air_act' : "air_moisture_actuator_activity",
-        'soil_act' : "soil_moisture_actuator_activity",
-        'water_act' : "water_level_actuator_activity"
+        'temp' : "temperature_actuator_activity",
+        'light' : "light_actuator_activity",
+        'air' : "air_moisture_actuator_activity",
+        'soil' : "soil_moisture_actuator_activity",
+        'water' : "water_level_actuator_activity"
     }
 
     conn = connect_db()
@@ -247,11 +247,11 @@ def insert_activity(type:str, action:str, greenroom_id:int):
 
 def insert_sensor(type:str, value:float, greenroom_id:int):
     CONVERSION = {
-        'temp_sensor' : "temperature_sensor",
-        'light_sensor' : "light_sensor",
-        'air_sensor' : "air_moisture_sensor",
-        'soil_sensor' : "soil_moisture_sensor",
-        'water_sensor' : "water_level_sensor"
+        'temp' : "temperature_sensor",
+        'light' : "light_sensor",
+        'air' : "air_moisture_sensor",
+        'soil' : "soil_moisture_sensor",
+        'water' : "water_level_sensor"
     }
 
     conn = connect_db()
@@ -264,11 +264,11 @@ def insert_sensor(type:str, value:float, greenroom_id:int):
 
 def update_mode(type:str, mode:str, greenroom_id:int):
     CONVERSION = {
-        'temp_mode' : "temperature_actuator_mode",
-        'light_mode' : "light_actuator_mode",
-        'air_mode' : "air_moisture_actuator_mode",
-        'soil_mode' : "soil_moisture_actuator_mode",
-        'water_mode' : "water_level_actuator_mode"
+        'temp' : "temperature_actuator_mode",
+        'light' : "light_actuator_mode",
+        'air' : "air_moisture_actuator_mode",
+        'soil' : "soil_moisture_actuator_mode",
+        'water' : "water_level_actuator_mode"
     }
 
     conn = connect_db()
