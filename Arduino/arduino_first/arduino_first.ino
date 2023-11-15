@@ -20,11 +20,15 @@ const int TEMPthreshold = 30;
 
 // Auto watering system pin
 int soil;
-int water;
 const int soilMoisture = 5;
-const int waterPump = 6;
+const int waterPumpSpeed = 11;
+const int waterPumpDirection = 13;
+
+// Nutrient loading module
+int water;
 const int waterLevel = 7;
-const int nutrientPump = 8;
+const int nutrientPumpSpeed = 10;
+const int nutrientPumpDirection = 12;
 
 // States
 const int AUTO = 0;
@@ -52,9 +56,11 @@ void setup() {
   pinMode(FAN, OUTPUT);
 
   pinMode(soilMoisture, INPUT);
-  pinMode(waterPump, OUTPUT);
+  pinMode(waterPumpSpeed, OUTPUT);
+  pinMode(waterPumpDirection, OUTPUT);
   pinMode(waterLevel, INPUT);
-  pinMode(nutrientPump, OUTPUT); 
+  pinMode(nutrientPumpSpeed, OUTPUT); 
+  pinMode(nutrientPumpDirection, OUTPUT); 
 
   // Ensure LEDs are initially turned off
   digitalWrite(LED1, LOW);
@@ -122,11 +128,29 @@ void loop() {
         digitalWrite(waterPump, HIGH);
         break;
       case 6:
-        digitalWrite(nutrientPump, LOW);
+        nutrientPumpScheduledTime = millis();
+        nutrientPumpCounter = 3;
         break;
       case 60:
-        digitalWrite(nutrientPump, HIGH);
+        nutrientPumpCounter = 0;
+        stopNutrientPump();
         break;
+      case 999:
+        int lightValue = analogRead(photoresistor);
+        Serial.print("snesor!light:");
+        Serial.println(lightValue);
+
+        int chk = DHT11.read(DHT11PIN);
+        Serial.print("snesor!temp:");
+        Serial.println((float)DHT11.temperature, 2);
+
+        soil = digitalRead(soilMoisture);
+        Serial.print("snesor!soil:");
+        Serial.println(soil);
+
+        water = digitalRead(waterLevel);
+        Serial.print("snesor!water:");
+        Serial.println(water);
       default:
         break;
     }
@@ -134,19 +158,22 @@ void loop() {
 
   // Light Control Logic
   int lightValue = analogRead(photoresistor);
-  Serial.print("light:");
-  Serial.println(lightValue);
-  Serial.print("|");
+  // Serial.print("light:");
+  // Serial.println(lightValue);
+  // Serial.print("|");
 
   // LED1 control
   if (LED1_mode == AUTO) {
     if (lightValue > Level2 && lightValue < Level1) {
+      Serial.println("act!light:1");
       digitalWrite(LED1, LOW);
     } else if (lightValue < Level2 && lightValue > Level3)
       digitalWrite(LED1, HIGH);    
     else if (lightValue < Level3) {
+      Serial.println("act!light:3");
       digitalWrite(LED1, LOW);
     } else {
+      Serial.println("act!light:0");
       digitalWrite(LED1, HIGH);
     }
   }
@@ -157,9 +184,11 @@ void loop() {
       digitalWrite(LED2, HIGH);
       digitalWrite(LED3, HIGH);
     } else if (lightValue < Level2) {
+      Serial.println("act!light:2");
       digitalWrite(LED2, LOW);
       digitalWrite(LED3, LOW);
     } else {
+      Serial.println("act!light:0");
       digitalWrite(LED2, HIGH);
       digitalWrite(LED3, HIGH);
     }
@@ -168,13 +197,17 @@ void loop() {
   // Fan
   if (FAN_mode == AUTO) {
     int chk = DHT11.read(DHT11PIN);
-    Serial.print("temperature:");
-    Serial.println((float)DHT11.temperature, 2);
-    Serial.print("|");
+    // Serial.print("temperature:");
+    // Serial.println((float)DHT11.temperature, 2);
+    // Serial.print("|");
 
     if(DHT11.temperature > TEMPthreshold) {
+      // This is starting the fan ?
+      Serial.println("act!temp:1");
       digitalWrite(FAN, HIGH); 
     } else {
+      // This is stopping the fan ?
+      Serial.println("act!temp:0");
       digitalWrite(FAN, LOW);  
     }
   }
@@ -182,28 +215,39 @@ void loop() {
   // waterPump
   if (waterPump_mode == AUTO) {
     soil = digitalRead(soilMoisture);
-    Serial.print("soil:");
-    Serial.println(soil);
-    Serial.print("|");
+    // Serial.print("soil:");
+    // Serial.println(soil);
+    // Serial.print("|");
+
     if (soil == HIGH) {
-      digitalWrite(waterPump, LOW);
+      // This is stopping the pump ?
+      analogWrite(waterPumpSpeed, 0);
+      Serial.println("act!soil:0");
+      // digitalWrite(waterPump, LOW);
     } else {
-      digitalWrite(waterPump, HIGH);
+      // This is starting the pump ?
+      digitalWrite(waterPumpDirection, LOW);
+      analogWrite(waterPumpSpeed, 150);
+      Serial.println("act!soil:1");
+      // digitalWrite(waterPump, HIGH);
     }
   }
   
-  //nutrientPump
-    if (nutrientPump_mode == AUTO) {
-    water = digitalRead(waterLevel);
-    Serial.print("water_level:");
-    Serial.print(water);
-    Serial.print("|");
-    if (water == HIGH) {
-      digitalWrite(nutrientPump, LOW);
-    } else {
-      digitalWrite(nutrientPump, HIGH);
-    }
-  }
+  // //nutrientPump
+  //   if (nutrientPump_mode == AUTO) {
+  //   water = digitalRead(waterLevel);
+  //   // Serial.print("water_level:");
+  //   // Serial.print(water);
+  //   // Serial.print("|");
+
+  //   if (water == HIGH) {
+  //     digitalWrite(nutrientPump, LOW);
+  //   } else {
+  //     digitalWrite(nutrientPump, HIGH);
+  //   }
+  // }
+
+  NutrientPumpLoop()
 
   delay(500);
 }
@@ -232,13 +276,14 @@ void NutrientPumpLoop(){
 void startNutrientPump(){
   nutrientPumpOn = true;
   nutrientPumpStartTime = millis();
-  nutrientPumpScheduledTime = millis() + 120000;
+  nutrientPumpScheduledTime = millis() + 10000;
   nutrientPumpCounter -= 1;
 
-  digitalWrite(nutrientPump, LOW);
+  digitalWrite(nutrientPumpDirection, LOW);
+  analogWrite(nutrientPumpSpeed, 150);
 }
 
 void stopNutrientPump(){
   nutrientPumpOn = false;
-  digitalWrite(nutrientPump, HIGH);
+  analogWrite(nutrientPumpSpeed, 0);
 }
