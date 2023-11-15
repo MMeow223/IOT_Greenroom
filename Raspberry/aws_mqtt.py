@@ -2,6 +2,7 @@ import serial
 import os
 from dotenv import load_dotenv
 from AWSIoTPythonSDK.MQTTLib import AWSIoTMQTTClient
+from apscheduler.schedulers.background import BackgroundScheduler
 import subprocess
 import time
 
@@ -87,18 +88,31 @@ def arduino_connection():
     arduino = serial.Serial(PORT, BAUDRATE)
     return arduino
 
+def read_arduino_serial():
+    if(arduino != None):
+        while arduino.in_waiting > 0:
+            line = arduino.readline().decode('utf-8').rstrip()
+            line = line + ";1"
+            print(line)
+            myMQTTClient.publish(sensor_topic, line, 1)
+
+def schedule_read_sensor():
+    def scheduler_job():
+        if(arduino != None):
+            if(arduino.isOpen == False):
+                arduino.open()
+            arduino.write(dict["read"].encode())
+    scheduler = BackgroundScheduler()
+    scheduler.add_job(scheduler_job, 'interval', minutes=15)
+    scheduler.start()
 
 def main():
     aws_iot_connection()
     subscribe_topic()
+#    schedule_read_sensor()
 #    ardunio = arduino_connection()
     while True:
-        if(arduino != None):
-            while arduino.in_waiting > 0:
-                line = arduino.readline().decode('utf-8').rstrip()
-                line = line + ";1"
-                print(line)
-                myMQTTClient.publish(sensor_topic, line, 1)
+        read_arduino_serial()
         time.sleep(1)
 
 if __name__ == "__main__":
