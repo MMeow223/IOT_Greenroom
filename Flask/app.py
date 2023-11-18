@@ -72,6 +72,25 @@ def on_message(client, userdata, message):
         update_mode(data_type, value, greenroom_id)
 
 
+def prepare_sidebar():
+    # Get all greenrooms
+    greenrooms = db.get_greenroom_all()
+    
+    # get current link
+    current_link = request.path
+    current_link = current_link.split("/")[1]
+    print(current_link)
+    
+    # prepare sidebar
+    sidebar = []
+    for gr in greenrooms:
+        sidebar.append({
+            "name": gr["name"],
+            "link": gr["greenroom_id"],
+            "active": gr["greenroom_id"] == current_link
+        })
+        
+    return sidebar
 @app.route('/')
 def index():
     
@@ -119,6 +138,7 @@ def index():
         
     data_template = {
         "greenroom": greenrooms,
+        "sidebar": prepare_sidebar()
         
     }
 
@@ -147,13 +167,18 @@ def create_greenroom_page():
             storage_ref.upload_from_string(file.read(), content_type=file.content_type)
             
             # Get the URL of the uploaded image
-            image_url = storage_ref.public_url
+            image_url = file.filename
         
         # Create the greenroom in your database, including the image URL
         create_greenroom(name, location, description, image_url)
             
-    
-    return render_template('create_greenroom.html')
+    data_template = {
+    # "greenroom": greenrooms,
+    "sidebar": prepare_sidebar()
+        
+    }
+
+    return render_template('index.html', data=data_template)
 
 
 
@@ -200,8 +225,66 @@ def page_greenroom_detail(id):
     greenroom.update(get_record_greenroom_all_actuator_mode_one(id))
     
     print(greenroom)
+    
+    data_template = {
+        "greenroom": greenroom,
+        "sidebar": prepare_sidebar()
+    }
 
-    return render_template('greenroom-detail.html', greenroom=greenroom)
+    return render_template('greenroom-detail.html', data=data_template)
+
+
+@app.route('/report_test', methods=['GET', 'POST'])
+def report_test():
+    greenrooms= get_greenroom("1")
+    for gr in greenrooms:
+        soil_chart_label = []
+        light_chart_label = []
+        temperature_chart_label = []
+        soil_chart_data = []
+        light_chart_data = []
+        temperature_chart_data = []
+        
+        for i in get_record_greenroom(gr["greenroom_id"],False,"soil_moisture"):
+            soil_chart_label.append(i["timestamp"])
+            soil_chart_data.append(i["value"])
+        
+        for i in get_record_greenroom(gr["greenroom_id"],False,"light"):
+            light_chart_label.append(i["timestamp"])
+            light_chart_data.append(i["value"])
+            
+        for i in get_record_greenroom(gr["greenroom_id"],False,"temperature"):
+            temperature_chart_label.append(i["timestamp"])
+            temperature_chart_data.append(i["value"])
+            
+        current_water_level = get_record_greenroom(gr["greenroom_id"],False,"level")
+        # get the last one
+        if len(current_water_level) > 0:
+            current_water_level = current_water_level[0]["value"]
+            if current_water_level == "0":
+                current_water_level = True
+            else:
+                current_water_level = False
+        else:
+            current_water_level = False
+            
+        greenrooms[greenrooms.index(gr)]["soil_chart_data"] = soil_chart_data
+        greenrooms[greenrooms.index(gr)]["light_chart_data"] = light_chart_data
+        greenrooms[greenrooms.index(gr)]["temperature_chart_data"] = temperature_chart_data
+        
+        greenrooms[greenrooms.index(gr)]["soil_chart_label"] = soil_chart_label
+        greenrooms[greenrooms.index(gr)]["light_chart_label"] = light_chart_label
+        greenrooms[greenrooms.index(gr)]["temperature_chart_label"] = temperature_chart_label
+        
+        greenrooms[greenrooms.index(gr)]["water_level"] = current_water_level
+        
+    data_template = {
+        "greenroom": greenrooms[0],
+        "sidebar": prepare_sidebar()
+        
+    }
+
+    return render_template('report-generate-test.html', data=data_template)
 
 @app.route('/analysis')
 def analysis():

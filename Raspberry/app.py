@@ -96,6 +96,14 @@ def aws_iot_connection():
 
 
 def decode(data):
+    data_array = data.split("|")
+    data_dic = {
+        "light": (int)(data_array[0].split(":")[1]),
+        "soil": (float)(data_array[1].split(":")[1]),
+        "temp": (int)(data_array[2].split(":")[1]),
+        "water_level": (int)(data_array[3].split(":")[1]),
+    }
+    
     pass
 
 

@@ -44,6 +44,7 @@ int LED1_mode = AUTO;
 int LED2_LED3_mode = AUTO;
 int FAN_mode = AUTO;
 int waterPump_mode = AUTO;
+int nutrientPump_mode = AUTO;
 
 void setup() {
   Serial.begin(9600);

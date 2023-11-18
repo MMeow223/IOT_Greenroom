@@ -47,6 +47,7 @@ def get_record_greenroom(greenroom_id, today=False, type = { "soil_moisture", "w
     cursor = conn.cursor()
     sql = "SELECT * FROM `"+TABLE_CONVERSION[type]+"` WHERE greenroom_id = %s AND timestamp >= %s"
     
+    print(sql)
     if today:
         # equal to 0:00:00 today
         date = datetime.now() - timedelta(days=1)
@@ -68,7 +69,8 @@ def get_record_greenroom(greenroom_id, today=False, type = { "soil_moisture", "w
             "greenroom_id": row[3]
         }
         result_list.append(result_dict)
-        
+    
+    print(result_list)
     return result_list
 
 
