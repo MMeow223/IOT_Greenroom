@@ -10,7 +10,7 @@ from AWSIoTPythonSDK.MQTTLib import AWSIoTMQTTClient
 # from firebase import firebase
 import firebase_admin
 from firebase_admin import credentials, storage
-
+import serial
 from camera import capture_image
 
 load_dotenv()

@@ -4,35 +4,33 @@
 
 dht11 DHT11;
 
-// Auto light system pin
-const int photoresistor = A0;
-const int LED1 = 9;
-const int LED2 = 10;
-const int LED3 = 11;
-
-const int Level1 = 350; 
-const int Level2 = 200; 
-const int Level3 = 100; 
-
-// Auto temperature system pin
-const int FAN = 3;
-const int TEMPthreshold = 30;
-
-// Auto watering system pin
-int soil;
-const int soilMoisture = 5;
-const int waterPumpSpeed = 11;
-const int waterPumpDirection = 13;
-
-// Nutrient loading module
-int water;
-const int waterLevel = 7;
-const int nutrientPumpSpeed = 10;
-const int nutrientPumpDirection = 12;
-
 // States
 const int AUTO = 0;
+const int LEFT = 0;
 const int MANUAL = 1;
+const int RIGHT = 1;
+
+// sensors pins
+const int PIN_PHOTORESISTOR = A0;
+const int PIN_SOIL_MOISTURE = A2;
+const int PIN_WATER_LEVEL = 7;
+
+// actuators pins
+const int PIN_FAN = 3;
+const int PIN_LED_ONE = 9;
+const int PIN_LED_TWO = 10;
+const int PIN_LED_THREE = 11;
+const int PIN_NUTRIENT_PUMP_SPEED = 10;
+const int PIN_WATER_PUMP_SPEED = 11;
+const int PIN_NUTRIENT_PUMP_DIRECTION = 12;
+const int PIN_WATER_PUMP_DIRECTION = 13;
+
+// THRESHOLDS
+const int BRIGHTNESS_LEVEL_ONE = 350;
+const int BRIGHTNESS_LEVEL_TWO = 200;
+const int BRITGHTNESS_LEVEL_THREE = 100;
+const int TEMP_THRES = 30;
+const int SOIL_MOISTURE_THRES = 500;
 
 // Nutrient pump variables
 bool nutrientPumpOn = false;
@@ -40,251 +38,318 @@ long int nutrientPumpStartTime = millis();
 long int nutrientPumpScheduledTime = millis();
 int nutrientPumpCounter = 0;
 
-int LED1_mode = AUTO;
-int LED2_LED3_mode = AUTO;
-int FAN_mode = AUTO;
-int waterPump_mode = AUTO;
-int nutrientPump_mode = AUTO;
+int MODE_LED_ONE = AUTO;
+int MODE_LED_TWO_THREE = AUTO;
+int MODE_FAN = AUTO;
+int MODE_WATER_PUMP = AUTO;
+int MODE_NUTRIENT_PUMP = AUTO;
 
-void setup() {
+int soil_moisture_value = 0; // 0-1023
+int water_level_value = 0;   // 0 or 1
+int light_value = 0;         // 0-1023
+int temperature_value = 0;   // 0-1023
+
+void setup()
+{
+  // set baud rate
   Serial.begin(9600);
 
-  pinMode(photoresistor, INPUT);
-  pinMode(LED1, OUTPUT);
-  pinMode(LED2, OUTPUT);
-  pinMode(LED3, OUTPUT);
+  // set pin mode
+  pinMode(PIN_PHOTORESISTOR, INPUT);
+  pinMode(PIN_LED_ONE, OUTPUT);
+  pinMode(PIN_LED_THREE, OUTPUT);
+  pinMode(PIN_LED_TWO, OUTPUT);
+  pinMode(PIN_FAN, OUTPUT);
+  pinMode(PIN_SOIL_MOISTURE, INPUT);
+  pinMode(PIN_WATER_PUMP_SPEED, OUTPUT);
+  pinMode(PIN_WATER_PUMP_DIRECTION, OUTPUT);
+  pinMode(PIN_WATER_LEVEL, INPUT);
+  pinMode(PIN_NUTRIENT_PUMP_SPEED, OUTPUT);
+  pinMode(PIN_NUTRIENT_PUMP_DIRECTION, OUTPUT);
 
-  pinMode(FAN, OUTPUT);
-
-  pinMode(soilMoisture, INPUT);
-  pinMode(waterPumpSpeed, OUTPUT);
-  pinMode(waterPumpDirection, OUTPUT);
-  pinMode(waterLevel, INPUT);
-  pinMode(nutrientPumpSpeed, OUTPUT); 
-  pinMode(nutrientPumpDirection, OUTPUT); 
-
-  // Ensure LEDs are initially turned off
-  digitalWrite(LED1, LOW);
-  digitalWrite(LED2, LOW);
-  digitalWrite(LED3, LOW);
+  // turn off all
+  digitalWrite(PIN_LED_ONE, LOW);
+  digitalWrite(PIN_LED_TWO, LOW);
+  digitalWrite(PIN_LED_THREE, LOW);
 }
 
-void loop() {
-  if (Serial.available()) {
-    int command = Serial.parseInt();
+void loop()
+{
 
-    switch (command) {
-      case 100:
-        LED1_mode = AUTO;
-        LED2_LED3_mode = AUTO;
-        FAN_mode = AUTO;
-        waterPump_mode = AUTO;
-        break;
-      case 1:
-        LED1_mode = MANUAL;
-        digitalWrite(LED1, LOW);
-        break;
-      case 10:
-        LED1_mode = MANUAL;
-        digitalWrite(LED1, HIGH);
-        break;
-      case 2:
-        LED2_LED3_mode = MANUAL;
-        digitalWrite(LED2, LOW);
-        digitalWrite(LED3, LOW);
-        break;
-      case 20:
-        LED2_LED3_mode = MANUAL;
-        digitalWrite(LED2, HIGH);
-        digitalWrite(LED3, HIGH);
-        break;
-      case 3:
-        LED1_mode = MANUAL;
-        LED2_LED3_mode = MANUAL;
-        digitalWrite(LED1, LOW);
-        digitalWrite(LED2, LOW);
-        digitalWrite(LED3, LOW);
-        break;
-      case 30:
-        LED1_mode = MANUAL;
-        LED2_LED3_mode = MANUAL;
-        digitalWrite(LED1, HIGH);
-        digitalWrite(LED2, HIGH);
-        digitalWrite(LED3, HIGH);
-        break;
-      case 4:
-        FAN_mode = MANUAL;
-        digitalWrite(FAN, LOW);
-        break;
-      case 40:
-        FAN_mode = MANUAL;
-        digitalWrite(FAN, HIGH);
-        break;
-      case 5:
-        waterPump_mode = MANUAL;
-        digitalWrite(waterPump, LOW);
-        break;
-      case 50:
-        waterPump_mode = MANUAL;
-        digitalWrite(waterPump, HIGH);
-        break;
-      case 6:
-        nutrientPumpScheduledTime = millis();
-        nutrientPumpCounter = 3;
-        break;
-      case 60:
-        nutrientPumpCounter = 0;
-        stopNutrientPump();
-        break;
-      case 999:
-        int lightValue = analogRead(photoresistor);
-        Serial.print("snesor!light:");
-        Serial.println(lightValue);
+  ReadSensors();
 
-        int chk = DHT11.read(DHT11PIN);
-        Serial.print("snesor!temp:");
-        Serial.println((float)DHT11.temperature, 2);
+  HandleSerialInput();
 
-        soil = digitalRead(soilMoisture);
-        Serial.print("snesor!soil:");
-        Serial.println(soil);
-
-        water = digitalRead(waterLevel);
-        Serial.print("snesor!water:");
-        Serial.println(water);
-      default:
-        break;
-    }
-  }
-
-  // Light Control Logic
-  int lightValue = analogRead(photoresistor);
-  // Serial.print("light:");
-  // Serial.println(lightValue);
-  // Serial.print("|");
-
-  // LED1 control
-  if (LED1_mode == AUTO) {
-    if (lightValue > Level2 && lightValue < Level1) {
-      Serial.println("act!light:1");
-      digitalWrite(LED1, LOW);
-    } else if (lightValue < Level2 && lightValue > Level3)
-      digitalWrite(LED1, HIGH);    
-    else if (lightValue < Level3) {
-      Serial.println("act!light:3");
-      digitalWrite(LED1, LOW);
-    } else {
-      Serial.println("act!light:0");
-      digitalWrite(LED1, HIGH);
-    }
-  }
-
-  // LED2 and LED3 control
-  if (LED2_LED3_mode == AUTO) {
-    if (lightValue < Level1 && lightValue > Level2) {
-      digitalWrite(LED2, HIGH);
-      digitalWrite(LED3, HIGH);
-    } else if (lightValue < Level2) {
-      Serial.println("act!light:2");
-      digitalWrite(LED2, LOW);
-      digitalWrite(LED3, LOW);
-    } else {
-      Serial.println("act!light:0");
-      digitalWrite(LED2, HIGH);
-      digitalWrite(LED3, HIGH);
-    }
-  }
-
-  // Fan
-  if (FAN_mode == AUTO) {
-    int chk = DHT11.read(DHT11PIN);
-    // Serial.print("temperature:");
-    // Serial.println((float)DHT11.temperature, 2);
-    // Serial.print("|");
-
-    if(DHT11.temperature > TEMPthreshold) {
-      // This is starting the fan ?
-      Serial.println("act!temp:1");
-      digitalWrite(FAN, HIGH); 
-    } else {
-      // This is stopping the fan ?
-      Serial.println("act!temp:0");
-      digitalWrite(FAN, LOW);  
-    }
-  }
-
-  // waterPump
-  if (waterPump_mode == AUTO) {
-    soil = digitalRead(soilMoisture);
-    // Serial.print("soil:");
-    // Serial.println(soil);
-    // Serial.print("|");
-
-    if (soil == HIGH) {
-      // This is stopping the pump ?
-      analogWrite(waterPumpSpeed, 0);
-      Serial.println("act!soil:0");
-      // digitalWrite(waterPump, LOW);
-    } else {
-      // This is starting the pump ?
-      digitalWrite(waterPumpDirection, LOW);
-      analogWrite(waterPumpSpeed, 150);
-      Serial.println("act!soil:1");
-      // digitalWrite(waterPump, HIGH);
-    }
-  }
-  
-  // //nutrientPump
-  //   if (nutrientPump_mode == AUTO) {
-  //   water = digitalRead(waterLevel);
-  //   // Serial.print("water_level:");
-  //   // Serial.print(water);
-  //   // Serial.print("|");
-
-  //   if (water == HIGH) {
-  //     digitalWrite(nutrientPump, LOW);
-  //   } else {
-  //     digitalWrite(nutrientPump, HIGH);
-  //   }
-  // }
-
-  NutrientPumpLoop()
+  ActuatorControl();
 
   delay(500);
 }
 
-void NutrientPumpLoop(){
-    water = digitalRead(waterLevel);
-
-    if(water == 1){
-        if(nutrientPumpCounter > 0 && millis() >= nutrientPumpScheduledTime){
-            startNutrientPump();
-        }
-
-        if(nutrientPumpOn){
-            long int currentTime = millis();
-            if(currentTime - nutrientPumpStartTime >= 1000){
-                stopNutrientPump();
-            }
-        }
-    }else{
-        stopNutrientPump();
-        nutrientPumpCounter = 0;
-    }
-
+// Read all the sensors
+void ReadSensors()
+{
+  DHT11.read(DHT11PIN);
+  light_value = analogRead(PIN_PHOTORESISTOR);
+  temperature_value = DHT11.temperature;
+  soil_moisture_value = analogRead(PIN_SOIL_MOISTURE);
+  water_level_value = digitalRead(PIN_WATER_LEVEL);
 }
 
-void startNutrientPump(){
+// Handle serial input
+void HandleSerialInput()
+{
+  if (Serial.available())
+  {
+    int command = Serial.parseInt();
+
+    switch (command)
+    {
+    case 100: // set all actuators to auto mode
+      MODE_LED_ONE = AUTO;
+      MODE_LED_TWO_THREE = AUTO;
+      MODE_FAN = AUTO;
+      MODE_WATER_PUMP = AUTO;
+      break;
+    case 1: // set LED1 to manual mode and turn it off
+      MODE_LED_ONE = MANUAL;
+      digitalWrite(PIN_LED_ONE, LOW);
+      break;
+    case 10: // set LED1 to manual mode and turn it on
+      MODE_LED_ONE = MANUAL;
+      digitalWrite(PIN_LED_ONE, HIGH);
+      break;
+    case 2: // set LED2 and LED3 to manual mode and turn them off
+      MODE_LED_TWO_THREE = MANUAL;
+      digitalWrite(PIN_LED_TWO, LOW);
+      digitalWrite(PIN_LED_THREE, LOW);
+      break;
+    case 20: // set LED2 and LED3 to manual mode and turn them on
+      MODE_LED_TWO_THREE = MANUAL;
+      digitalWrite(PIN_LED_TWO, HIGH);
+      digitalWrite(PIN_LED_THREE, HIGH);
+      break;
+    case 3: // set LED1, LED2 and LED3 to manual mode and turn them off
+      MODE_LED_ONE = MANUAL;
+      MODE_LED_TWO_THREE = MANUAL;
+      digitalWrite(PIN_LED_ONE, LOW);
+      digitalWrite(PIN_LED_TWO, LOW);
+      digitalWrite(PIN_LED_THREE, LOW);
+      break;
+    case 30: // set LED1, LED2 and LED3 to manual mode and turn them on
+      MODE_LED_ONE = MANUAL;
+      MODE_LED_TWO_THREE = MANUAL;
+      digitalWrite(PIN_LED_ONE, HIGH);
+      digitalWrite(PIN_LED_TWO, HIGH);
+      digitalWrite(PIN_LED_THREE, HIGH);
+      break;
+    case 4: // set fan to manual mode and turn it off
+      MODE_FAN = MANUAL;
+      digitalWrite(PIN_FAN, LOW);
+      break;
+    case 40: // set fan to manual mode and turn it on
+      MODE_FAN = MANUAL;
+      digitalWrite(PIN_FAN, HIGH);
+      break;
+    case 5: // set water pump to manual mode and turn it off
+      MODE_WATER_PUMP = MANUAL;
+      digitalWrite(PIN_WATER_PUMP_SPEED, LOW);
+      break;
+    case 50: // set water pump to manual mode and turn it on
+      MODE_WATER_PUMP = MANUAL;
+      digitalWrite(PIN_WATER_PUMP_SPEED, HIGH);
+      break;
+    case 6: // set nutrient pump configuration for later process
+      nutrientPumpScheduledTime = millis();
+      nutrientPumpCounter = 3;
+      break;
+    case 60: // reset nutrient pump configuration
+      nutrientPumpCounter = 0;
+      stopNutrientPump();
+      break;
+    case 999: // print all the sensor values
+      Serial.print("sensor!light:");
+      Serial.println(light_value);
+
+      Serial.print("sensor!temp:");
+      Serial.println((float)temperature_value, 2);
+
+      Serial.print("sensor!soil:");
+      Serial.println(soil_moisture_value);
+
+      Serial.print("sensor!water:");
+      Serial.println(water_level_value);
+    default:
+      break;
+    }
+  }
+}
+
+// Control all the actuators
+void ActuatorControl()
+{
+  AutoLedControl();
+  AutoFanControl();
+  AutoWaterPumpControl();
+  NutrientPumpLoop();
+}
+
+// Control all the LEDs
+void AutoLedControl()
+{
+  AutoLedOneControl();
+  AutoLedTwoThreeControl();
+}
+
+// Control LED1
+void AutoLedOneControl()
+{
+
+  // PIN_LED_ONE control
+  if (MODE_LED_ONE == AUTO)
+  {
+    if (light_value > BRIGHTNESS_LEVEL_TWO && light_value < BRIGHTNESS_LEVEL_ONE)
+    {
+      Serial.println("act!light:1");
+      digitalWrite(PIN_LED_ONE, LOW);
+    }
+    else if (light_value < BRIGHTNESS_LEVEL_TWO && light_value > BRITGHTNESS_LEVEL_THREE)
+      digitalWrite(PIN_LED_ONE, HIGH);
+    else if (light_value < BRITGHTNESS_LEVEL_THREE)
+    {
+      Serial.println("act!light:3");
+      digitalWrite(PIN_LED_ONE, LOW);
+    }
+    else
+    {
+      Serial.println("act!light:0");
+      digitalWrite(PIN_LED_ONE, HIGH);
+    }
+  }
+}
+
+// Control LED2 and LED3
+void AutoLedTwoThreeControl()
+{
+
+  if (MODE_LED_TWO_THREE == MANUAL)
+  {
+    return;
+  }
+
+  if (light_value < BRIGHTNESS_LEVEL_ONE && light_value > BRIGHTNESS_LEVEL_TWO)
+  {
+    digitalWrite(PIN_LED_TWO, HIGH);
+    digitalWrite(PIN_LED_TWO, HIGH);
+  }
+  else if (light_value < BRIGHTNESS_LEVEL_TWO)
+  {
+    Serial.println("act!light:2");
+    digitalWrite(PIN_LED_TWO, LOW);
+    digitalWrite(PIN_LED_THREE, LOW);
+  }
+  else
+  {
+    Serial.println("act!light:0");
+    digitalWrite(PIN_LED_TWO, HIGH);
+    digitalWrite(PIN_LED_THREE, HIGH);
+  }
+}
+
+// Control the fan
+void AutoFanControl()
+{
+
+  if (MODE_FAN == MANUAL)
+  {
+    return;
+  }
+
+  if (temperature_value > TEMP_THRES)
+  {
+    Serial.println("act!temp:1");
+    digitalWrite(PIN_FAN, HIGH);
+  }
+  else
+  {
+    Serial.println("act!temp:0");
+    digitalWrite(PIN_FAN, LOW);
+  }
+}
+
+// Control the water pump
+void AutoWaterPumpControl()
+{
+
+  if (MODE_WATER_PUMP == MANUAL)
+  {
+    return;
+  }
+
+  if (soil_moisture_value >= SOIL_MOISTURE_THRES)
+  {
+    Serial.println("act!soil:0");
+    analogWrite(PIN_WATER_PUMP_SPEED, 0);
+  }
+  else
+  {
+    Serial.println("act!soil:1");
+    digitalWrite(PIN_WATER_PUMP_DIRECTION, LEFT);
+    analogWrite(PIN_WATER_PUMP_SPEED, 150);
+  }
+}
+
+void PumpWater()
+{
+  if (soil_moisture_value <= SOIL_MOISTURE_THRES && water_level_value == 1)
+  {
+    digitalWrite(PIN_WATER_PUMP_DIRECTION, LEFT);
+    analogWrite(PIN_WATER_PUMP_SPEED, 150);
+  }
+  else
+  {
+    analogWrite(PIN_WATER_PUMP_SPEED, 0);
+  }
+}
+
+void NutrientPumpLoop()
+{
+
+  if (water_level_value == 1)
+  {
+    if (nutrientPumpCounter > 0 && millis() >= nutrientPumpScheduledTime)
+    {
+      startNutrientPump();
+    }
+
+    if (nutrientPumpOn)
+    {
+      long int currentTime = millis();
+      if (currentTime - nutrientPumpStartTime >= 1000)
+      {
+        stopNutrientPump();
+      }
+    }
+  }
+  else
+  {
+    stopNutrientPump();
+    nutrientPumpCounter = 0;
+  }
+}
+
+void startNutrientPump()
+{
   nutrientPumpOn = true;
   nutrientPumpStartTime = millis();
   nutrientPumpScheduledTime = millis() + 10000;
   nutrientPumpCounter -= 1;
 
-  digitalWrite(nutrientPumpDirection, LOW);
-  analogWrite(nutrientPumpSpeed, 150);
+  digitalWrite(PIN_NUTRIENT_PUMP_DIRECTION, LEFT);
+  analogWrite(PIN_NUTRIENT_PUMP_SPEED, 150);
 }
 
-void stopNutrientPump(){
+void stopNutrientPump()
+{
   nutrientPumpOn = false;
-  analogWrite(nutrientPumpSpeed, 0);
+  analogWrite(PIN_NUTRIENT_PUMP_SPEED, 0);
 }
