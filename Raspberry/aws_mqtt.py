@@ -98,7 +98,7 @@ def get_plant_size_from_model(image_path):
     print(result["predictions"][0]["width"])
     print(result["predictions"][0]["height"])
 
-    return 300    
+    return (result["predictions"][0]["width"] + result["predictions"][0]["height"])/2
     
     # print((result.predictions[0].width + result.predictions[0].height)/2)
     
