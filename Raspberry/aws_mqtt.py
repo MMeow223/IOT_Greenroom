@@ -8,6 +8,8 @@ from firebase_admin import credentials, storage
 import subprocess
 import time
 from camera import capture_image
+import math
+from roboflow import Roboflow
 
 load_dotenv()
 
@@ -23,107 +25,107 @@ BAUDRATE = os.getenv("BAUDRATE")
 CREDENTIALS = os.getenv("CREDENTIALS")
 FIREBASE_STORAGE = os.getenv("FIREBASE_STORAGE")
 
-arduino_1 = None
-arduino_2 = None
 actuator_topic = "actuator"
 scheduler_topic = "scheduler"
 sensor_topic = "sensor"
-dict = {
-    "light_act:0" : "30",
-    "light_act:1" : "1",
-    "light_act:2" : "2",
-    "light_act:3" : "3",
-    "temp_act:0" : "40",
-    "temp_act:1" : "4",
-    "soil_act:0" : "50",
-    "soil_act:1" : "5",
-    "water_act:0" : "60",
-    "water_act:1" : "6",
-    "read" : "999",
-    "read_height" : "101",
+image_path = "image.jpg"
+
+# Define the dictionary for commands
+commands = {
+    "light:0": "30",
+    "light:1": "1",
+    "light:2": "2",
+    "light:3": "3",
+    "temp:0": "40",
+    "temp:1": "4",
+    "soil:0": "50",
+    "soil:1": "5",
+    "water:0": "60",
+    "water:1": "6",
+    "read": "999",
+    "read_height": "101",
 }
-
-
 
 myMQTTClient = AWSIoTMQTTClient(AWS_CLIENT)
 
 def firebase_storage(bucket_dir, image_path):
-
     cred = credentials.Certificate(CREDENTIALS)
-    # print("Uploading image to Firebase Storage...")
-    firebase_admin.initialize_app(cred, {
-        'storageBucket': FIREBASE_STORAGE
-    })
-
-    # Path to the image you want to upload
-    # image_path = "image/2023-10-08-01115008-62db-4593-827a-24c3927a0ff9.png"
+    firebase_admin.initialize_app(cred, {'storageBucket': FIREBASE_STORAGE})
 
     filename = os.path.basename(image_path)
-
-    # Create a Cloud Storage client
     bucket = storage.bucket()
+    destination_blob_name = f"{bucket_dir}/{filename}"
 
-    # Define the destination path in Firebase Storage (optional)
-    destination_blob_name = "{}/{}".format(bucket_dir, filename)
-
-    # Upload the image
     try:
-        # Open and read the image
         with open(image_path, "rb") as image_file:
             image_data = image_file.read()
 
-        # Create a blob and upload the image data
         blob = bucket.blob(destination_blob_name)
         blob.upload_from_string(image_data, content_type="image/jpeg")
 
-        print(
-            f"Image {image_path} uploaded to Firebase Storage at {destination_blob_name}")
+        print(f"Image {image_path} uploaded to Firebase Storage at {destination_blob_name}")
     except Exception as e:
         print(f"Error uploading image: {e}")
 
-    # Clean up: Delete the temporary credentials
     firebase_admin.delete_app(firebase_admin.get_app())
 
-    os.remove(image_path)
     
-def calculate_plant_size():
+
+def plant_width(plant_width_camera, plant_height, distance_to_soil):
+
+    """
+    plant_width_camera: [Pixels]
+    focal_length: (= 2495.6) Camera Specific (calculated for our camera)
+    distance_to_soil: Distance between the camera and the plant soil [mm]
+    plant_height: Distance between soil and top of plant [mm]
+    """
+
+    focal_length = 2495.6
+    result = abs(2 * math.tan(2 * math.atan(plant_width_camera / (2 * focal_length))) * (distance_to_soil - plant_height)) 
+    return result
+
+def save_image_to_db(image_path):
     return NotImplementedError
 
-def aws_iot_connection():
+def get_plant_size_from_model(image_path):
+    rf = Roboflow(api_key="9TwZaDpIJ3gnWQ0inEaH")
+    project = rf.workspace().project("plant-size-zrqp4")
+    model = project.version(2).model
 
-    # AWS IoT certificate based connection
+    result = model.predict(image_path, confidence=40, overlap=30).json()
+    print(result)
+    
+    return result
+   
+
+def aws_iot_connection():
     myMQTTClient.configureEndpoint(AWS_ENDPOINT, 8883)
     myMQTTClient.configureCredentials(AWS_ROOT_CA, AWS_PRIVATE_KEY, AWS_CERTIFICATE)
-    # Infinite offline Publish queueing
     myMQTTClient.configureOfflinePublishQueueing(-1)
-    myMQTTClient.configureDrainingFrequency(2)  # Draining: 2 Hz
-    myMQTTClient.configureConnectDisconnectTimeout(10)  # 10 sec
-    myMQTTClient.configureMQTTOperationTimeout(5)  # 5 sec
-    # connect and publish
+    myMQTTClient.configureDrainingFrequency(2)
+    myMQTTClient.configureConnectDisconnectTimeout(10)
+    myMQTTClient.configureMQTTOperationTimeout(5)
     myMQTTClient.connect()
     print("Connection successful")
 
 def on_message_received(client, userdata, message):
+    
+    
+    print("Received a new message: ")
     payload = message.payload.decode()
     topic = message.topic
-    if topic == "actuator":
-        print("Received--"+payload)
-        if(arduino_1 != None):
-            if(arduino_1.isOpen == False):
-                arduino_1.open()
-            arduino_1.write(dict[payload].encode())
-    elif topic == "scheduler":
-        print("Received--"+payload)
-        if(arduino_1 != None):
-            if(arduino_1.isOpen == False):
-                arduino_1.open()
-            arduino_1.write(dict[payload].encode())
-            
 
+    if topic == actuator_topic or topic == scheduler_topic:
+        print(f"Received--{payload}")
+        arduino_write(payload)
 
 def subscribe_topic():
-    myMQTTClient.subscribe(actuator_topic, 1, on_message_received)
-    myMQTTClient.subscribe(scheduler_topic, 1, on_message_received)
+    result1 = myMQTTClient.subscribe(actuator_topic, 1, on_message_received)
+    result2 = myMQTTClient.subscribe(scheduler_topic, 1, on_message_received)
+    
+    print(result1)
+    print(result2)
+
     print("Subscribe successful")
 
 def arduino_connection():
@@ -131,66 +133,56 @@ def arduino_connection():
     arduino_1 = serial.Serial(PORT1, BAUDRATE)
     arduino_2 = serial.Serial(PORT2, BAUDRATE)
 
+def arduino_write(arduino, command):
+    if arduino is not None:
+        if arduino.isOpen == False:
+            arduino.open()
+        arduino.write(commands[command].encode())
+
 def read_arduino_serial():
-    # better practice will be send a proper json format and all data in one json
-    if(arduino_1 != None):
-        while arduino_1.in_waiting > 0:
-            line = arduino_1.readline().decode('utf-8').rstrip()
+    read_arduino(arduino_1)
+    read_arduino(arduino_2)
+
+def read_arduino(arduino):
+    global image_path
+    
+    if arduino is not None:
+        while arduino.in_waiting > 0:
+            line = arduino.readline().decode('utf-8').rstrip()
             line = line + ";1"
             print(line)
             myMQTTClient.publish(sensor_topic, line, 1)
             
-    if(arduino_2 != None):
-        while arduino_2.in_waiting > 0:
-            line = arduino_2.readline().decode('utf-8').rstrip()
-            line = line + ";2"
-            print(line)
-            myMQTTClient.publish(sensor_topic, line, 1)
+            sensor_type = (line.split("!")[1]).split(":")[0]
+            plant_height = (line.split("!")[1]).split(":")[1]
+            if sensor_type == "height":
+                plant_size = 300
+                # plant_size = get_plant_size_from_model(image_path)
+                actual_plant_size = plant_width(plant_size,(int)(plant_height),8)
+                os.remove(image_path)
+                print("actual_plant_size = ", actual_plant_size)
 
-# schedule a job to call funciton in arduino 1 and 2 every 15 minutes
 def schedule_read_sensor():
-    def scheduler_job_one():
-        # schedule to get sensor data from arduino 1
-        if(arduino_1 != None):
-            if(arduino_1.isOpen == False):
-                arduino_1.open()
-            arduino_1.write(dict["read"].encode())
-    
-    def scheduler_job_two():
-        # schedule to get height data from arduino 2
-        if(arduino_2 != None):
-            if(arduino_2.isOpen == False):
-                arduino_2.open()
-            arduino_2.write(dict["read_height"].encode())
-
-        # schedule to take picture
-        image_path = capture_image()
-        firebase_storage("plant_size_image",
-                     image_path)
-        
-        print("Take picture")
-        print("Location" + image_path)
-    
     scheduler1 = BackgroundScheduler()
-    scheduler1.add_job(scheduler_job_one, 'interval', minutes=1)
+    scheduler1.add_job(scheduler_job, 'interval', minutes=1)
     scheduler1.start()
+
+def scheduler_job():
+    global arduino_1, arduino_2, image_path
+    arduino_write(arduino_1, "read")
+    arduino_write(arduino_2, "read_height")
+
+    image_path = capture_image()
+    firebase_storage("plant_size_image", image_path)
+    save_image_to_db(image_path)
     
-    scheduler2 = BackgroundScheduler()
-    scheduler2.add_job(scheduler_job_two, 'interval', minutes=1)
-    scheduler2.start()
-    
-    
-def publish_topic():
-    
-    # to actuator
-    
-    message = "light_act:0"
-    
-    json = '{"message": "' + message + '"}'
-    
-    myMQTTClient.publish(actuator_topic, json, 1)
-    
+    print("Take picture")
+    print("Location" + image_path)
+
 def main():
+    # actual_plant_size = plant_width(100,(int)(220),80)
+    # print("actual_plant_size = ", actual_plant_size)
+    
     arduino_connection()
     aws_iot_connection()
     subscribe_topic()

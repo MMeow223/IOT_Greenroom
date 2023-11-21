@@ -10,7 +10,7 @@ const int US_echoPins[] = {6, 7, 8};
 const int US_trigPin[] = {9};
 
 int sensorPosition = 0; // Assuming that sensor mount is at botton position at start. [mm]
-const int maxHeight = 150; // max height sensor mount can move up. [mm]
+const int maxHeight = 195; // max height sensor mount can move up. [mm]
 
 const int DistToWall = 22; // The distance to the lid/wall of the enclosure. [mm]
 const int DistToWallMarg = 3; // Margin of the reading of the distance to the lid/wall. [mm]
@@ -129,7 +129,7 @@ void loop() {
       sensorPosition += distance;
     } else {
 
-      Serial.print("height:");
+      Serial.print("sensor!height:");
       Serial.println(plantHeight);
 
       motorCycle(-(sensorPosition), 10);
