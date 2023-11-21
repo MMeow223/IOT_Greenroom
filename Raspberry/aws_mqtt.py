@@ -88,14 +88,22 @@ def save_image_to_db(image_path):
     return NotImplementedError
 
 def get_plant_size_from_model(image_path):
-    rf = Roboflow(api_key="9TwZaDpIJ3gnWQ0inEaH")
-    project = rf.workspace().project("plant-size-zrqp4")
-    model = project.version(2).model
-
-    result = model.predict(image_path, confidence=40, overlap=30).json()
-    print(result)
+    rf = Roboflow(api_key="DZakyhtiyjUvgQ96ykBS")
+    project = rf.workspace().project("plant_size")
+    model = project.version(1).model
     
-    return result
+    result = model.predict(image_path, confidence=40, overlap=30).json()
+    
+    print(result)
+    print(result["predictions"][0]["width"])
+    print(result["predictions"][0]["height"])
+
+    return 300    
+    
+    # print((result.predictions[0].width + result.predictions[0].height)/2)
+    
+    # return (result.predictions[0].width + result.predictions[0].height)/2
+    # return result
    
 
 def aws_iot_connection():
@@ -154,10 +162,11 @@ def read_arduino(arduino):
             myMQTTClient.publish(sensor_topic, line, 1)
             
             sensor_type = (line.split("!")[1]).split(":")[0]
-            plant_height = (line.split("!")[1]).split(":")[1]
+            plant_height = ((line.split("!")[1]).split(":")[1]).split(";")[0]
             if sensor_type == "height":
                 plant_size = 300
-                # plant_size = get_plant_size_from_model(image_path)
+                image_path = "C:/Users/Asus/Pictures/Camera Roll/WIN_20231121_12_02_51_Pro.jpg"
+                plant_size = get_plant_size_from_model(image_path)
                 actual_plant_size = plant_width(plant_size,(int)(plant_height),8)
                 os.remove(image_path)
                 print("actual_plant_size = ", actual_plant_size)
@@ -180,9 +189,6 @@ def scheduler_job():
     print("Location" + image_path)
 
 def main():
-    # actual_plant_size = plant_width(100,(int)(220),80)
-    # print("actual_plant_size = ", actual_plant_size)
-    
     arduino_connection()
     aws_iot_connection()
     subscribe_topic()
