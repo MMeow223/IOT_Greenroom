@@ -38,12 +38,21 @@ commands = {
     "light:3": "3",
     "temp:0": "40",
     "temp:1": "4",
-    "soil:0": "50",
-    "soil:1": "5",
+    "soil:0": "5",
+    "soil:1": "50",
     "water:0": "60",
     "water:1": "6",
     "read": "999",
     "read_height": "101",
+}
+
+activity_cache = {
+    "light": "",
+    "temp": "",
+    "soil": "",
+    "water": "",
+    "height": "",
+    "size": "",
 }
 
 myMQTTClient = AWSIoTMQTTClient(AWS_CLIENT)
@@ -94,10 +103,6 @@ def get_plant_size_from_model(image_path):
     
     result = model.predict(image_path, confidence=40, overlap=30).json()
     
-    print(result)
-    print(result["predictions"][0]["width"])
-    print(result["predictions"][0]["height"])
-
     return (result["predictions"][0]["width"] + result["predictions"][0]["height"])/2
     
     # print((result.predictions[0].width + result.predictions[0].height)/2)
@@ -125,7 +130,7 @@ def on_message_received(client, userdata, message):
 
     if topic == actuator_topic or topic == scheduler_topic:
         print(f"Received--{payload}")
-        arduino_write(payload)
+        arduino_write(arduino_1, payload)
 
 def subscribe_topic():
     result1 = myMQTTClient.subscribe(actuator_topic, 1, on_message_received)
@@ -159,17 +164,24 @@ def read_arduino(arduino):
             line = arduino.readline().decode('utf-8').rstrip()
             line = line + ";1"
             print(line)
-            myMQTTClient.publish(sensor_topic, line, 1)
             
             sensor_type = (line.split("!")[1]).split(":")[0]
+            
+            if activity_cache[sensor_type] != line:
+                activity_cache[sensor_type] = line
+                myMQTTClient.publish(sensor_topic, line, 1)
+            
+            
             plant_height = ((line.split("!")[1]).split(":")[1]).split(";")[0]
             if sensor_type == "height":
-                plant_size = 300
-                image_path = "C:/Users/Asus/Pictures/Camera Roll/WIN_20231121_12_02_51_Pro.jpg"
+                # plant_size = 300
+                # image_path = "C:/Users/Asus/Pictures/Camera Roll/WIN_20231121_12_02_51_Pro.jpg"
                 plant_size = get_plant_size_from_model(image_path)
                 actual_plant_size = plant_width(plant_size,(int)(plant_height),8)
                 os.remove(image_path)
                 print("actual_plant_size = ", actual_plant_size)
+                line = "sensor!size:" + str(actual_plant_size) + ";1"
+                myMQTTClient.publish(sensor_topic, line, 1)
 
 def schedule_read_sensor():
     scheduler1 = BackgroundScheduler()

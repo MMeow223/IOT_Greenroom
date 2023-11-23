@@ -13,13 +13,13 @@ const int RIGHT = 1;
 // sensors pins
 const int PIN_PHOTORESISTOR = A0;
 const int PIN_SOIL_MOISTURE = A2;
-const int PIN_WATER_LEVEL = 7;
+const int PIN_WATER_LEVEL = 2;
 
 // actuators pins
-const int PIN_FAN = 3;
-const int PIN_LED_ONE = 9;
-const int PIN_LED_TWO = 10;
-const int PIN_LED_THREE = 11;
+const int PIN_FAN = 9;
+const int PIN_LED_ONE = 6;
+const int PIN_LED_TWO = 7;
+const int PIN_LED_THREE = 8;
 const int PIN_NUTRIENT_PUMP_SPEED = 10;
 const int PIN_WATER_PUMP_SPEED = 11;
 const int PIN_NUTRIENT_PUMP_DIRECTION = 12;
@@ -36,6 +36,7 @@ const int SOIL_MOISTURE_THRES = 500;
 bool nutrientPumpOn = false;
 long int nutrientPumpStartTime = millis();
 long int nutrientPumpScheduledTime = millis();
+int nutrientPumpDuration = 1000;
 int nutrientPumpCounter = 0;
 
 int MODE_LED_ONE = AUTO;
@@ -63,7 +64,7 @@ void setup()
   pinMode(PIN_SOIL_MOISTURE, INPUT);
   pinMode(PIN_WATER_PUMP_SPEED, OUTPUT);
   pinMode(PIN_WATER_PUMP_DIRECTION, OUTPUT);
-  pinMode(PIN_WATER_LEVEL, INPUT);
+  pinMode(PIN_WATER_LEVEL, INPUT_PULLUP);
   pinMode(PIN_NUTRIENT_PUMP_SPEED, OUTPUT);
   pinMode(PIN_NUTRIENT_PUMP_DIRECTION, OUTPUT);
 
@@ -113,6 +114,8 @@ void HandleSerialInput()
     case 1: // set LED1 to manual mode and turn it off
       MODE_LED_ONE = MANUAL;
       digitalWrite(PIN_LED_ONE, LOW);
+      digitalWrite(PIN_LED_TWO, HIGH);
+      digitalWrite(PIN_LED_THREE, HIGH);
       break;
     case 10: // set LED1 to manual mode and turn it on
       MODE_LED_ONE = MANUAL;
@@ -120,6 +123,7 @@ void HandleSerialInput()
       break;
     case 2: // set LED2 and LED3 to manual mode and turn them off
       MODE_LED_TWO_THREE = MANUAL;
+      digitalWrite(PIN_LED_ONE, HIGH);
       digitalWrite(PIN_LED_TWO, LOW);
       digitalWrite(PIN_LED_THREE, LOW);
       break;
@@ -258,7 +262,6 @@ void AutoLedTwoThreeControl()
 // Control the fan
 void AutoFanControl()
 {
-
   if (MODE_FAN == MANUAL)
   {
     return;
@@ -285,7 +288,7 @@ void AutoWaterPumpControl()
     return;
   }
 
-  if (soil_moisture_value >= SOIL_MOISTURE_THRES)
+  if (soil_moisture_value <= SOIL_MOISTURE_THRES)
   {
     Serial.println("act!soil:0");
     analogWrite(PIN_WATER_PUMP_SPEED, 0);
@@ -324,7 +327,7 @@ void NutrientPumpLoop()
     if (nutrientPumpOn)
     {
       long int currentTime = millis();
-      if (currentTime - nutrientPumpStartTime >= 1000)
+      if (currentTime - nutrientPumpStartTime >= nutrientPumpDuration)
       {
         stopNutrientPump();
       }
