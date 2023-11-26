@@ -42,8 +42,9 @@ commands = {
     "soil:1": "50",
     "water:0": "60",
     "water:1": "6",
-    "read": "999",
+    "reset": "100",
     "read_height": "101",
+    "read": "999"
 }
 
 activity_cache = {
