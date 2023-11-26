@@ -230,6 +230,72 @@ def get_record_greenroom_all_actuator_mode_one(greenroom_id, today=False):
         
     return result_dict
 
+def get_record_greenroom_all_actuator_threshold_one(greenroom_id, today=False):
+    ACTUATOR_MODE_CONVERSION = {
+        'temperature_actuator_threshold' : 'temperature_threshold',
+        'light_actuator_threshold' : 'light_threshold',
+        'soil_moisture_actuator_threshold' : 'moisture_threshold'
+    }
+
+    result_dict = {}
+    table_name = [
+        'temperature_actuator_threshold',
+        'light_actuator_threshold',
+        'soil_moisture_actuator_threshold',
+    ]
+
+    conn = connect_db()
+    cursor = conn.cursor()
+
+    for t in table_name:
+        if t == 'light_actuator_threshold':
+            brightness_level = [1, 2, 3]
+            for level in brightness_level:
+                sql = "SELECT threshold FROM `"+t+"` WHERE greenroom_id = %s AND level = %s ORDER BY timestamp DESC LIMIT 1"
+                
+                param = (greenroom_id, level,)
+                cursor.execute(sql, param)
+                result = cursor.fetchone()
+
+                param_action = ACTUATOR_MODE_CONVERSION[t] + f'_{level}'
+
+                if result != None :
+                    result_dict[param_action] = result[0]
+        else:
+            sql = "SELECT threshold FROM `"+t+"` WHERE greenroom_id = %s ORDER BY timestamp DESC LIMIT 1"
+                
+            param = (greenroom_id,)
+            cursor.execute(sql, param)
+            result = cursor.fetchone()
+            
+            param_action = ACTUATOR_MODE_CONVERSION[t]
+
+            if result != None :
+                result_dict[param_action] = result[0]   
+        
+    return result_dict
+
+def insert_threshold(type:str, threshold:float, greenroom_id:int, level:int = None):
+    CONVERSION = {
+        'temp' : "temperature_actuator_threshold",
+        'light' : "light_actuator_threshold",
+        'soil' : "soil_moisture_actuator_threshold"
+    }
+
+    conn = connect_db()
+    cursor = conn.cursor()
+    table = CONVERSION[type]
+
+    if table == "light_actuator_threshold":
+        sql = "INSERT INTO `"+table+"` (threshold,greenroom_id,level) VALUES (%s,%s,%s)"
+        param = (threshold, greenroom_id, level)
+    else:
+        sql = "INSERT INTO `"+table+"` (threshold,greenroom_id) VALUES (%s,%s)"
+        param = (threshold, greenroom_id)
+        
+    cursor.execute(sql, param)
+    conn.commit()
+
 def insert_activity(type:str, action:str, greenroom_id:int):
     CONVERSION = {
         'temp' : "temperature_actuator_activity",

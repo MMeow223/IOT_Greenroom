@@ -190,6 +190,7 @@ def create_greenroom_page():
 @app.route('/greenroom-detail/<id>', methods=['GET', 'POST'])
 def page_greenroom_detail(id):
     all_param = ["water", "soil", "light", "temp"]
+    thres_param = ["soil_threshold", "light_threshold_1", "light_threshold_2", "light_threshold_3", "temp_threshold"]
 
     reset = request.form.get("reset_auto")
     if reset != None:
@@ -199,6 +200,15 @@ def page_greenroom_detail(id):
         result = myMQTTClient.publish(actuator_topic, reset, 1)
         print("RESULT FOR PUBLISH")
         print(result)
+
+    threshold = request.form.get("threshold_update")
+    if threshold != None:
+        for param in thres_param:
+            value = request.form.get(param)
+            msg = f"{param}:{value}"
+            result = myMQTTClient.publish(actuator_topic, msg, 1)
+            print("RESULT FOR PUBLISH")
+            print(result)
 
     for param in all_param:
         value = request.form.get(param)
@@ -239,6 +249,8 @@ def page_greenroom_detail(id):
     greenroom["image"] = get_greenroom(id)[0]["image"]
 
     greenroom.update(get_record_greenroom_all_actuator_mode_one(id))
+
+    greenroom.update(get_record_greenroom_all_actuator_threshold_one(id))
      
     data_template = {
         "greenroom": greenroom,
