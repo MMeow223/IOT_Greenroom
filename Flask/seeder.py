@@ -11,115 +11,130 @@ def connect_db():
         host="localhost",
         user="root",
         password="",
-        database="iot_greenroom"
+        database="iot_greenroom_2"
     )
     return connection
 
-
-def seed_temperature_sensor():
+def seed_temperature_sensor(id):
     conn = connect_db()
     cursor = conn.cursor()
-    for _ in range(100):  # Adjust the number of records you want to create
+    timestamp = datetime(2019,1,1)
+    for _ in range(1825):  # Adjust the number of records you want to create
         value = random.uniform(20.0, 30.0)  # Example temperature range
-        greenroom_id = 1
-        # timestamp today across a range of 24 hours and the end date is the end of today
-        # timestamp = fake.date_time_between(start_date='today', end_date='today 23:59:59', tzinfo=None)
-        timestamp = fake.date_time_between(start_date='-1d', end_date='+1d', tzinfo=None)
+        greenroom_id = id
         
-        # timestamp = fake.date_time_between(start_date='-5y', end_date='now', tzinfo=None)
+        timestamp = timestamp + timedelta(days=1)
+
         sql = "INSERT INTO `temperature_sensor`(`value`, `timestamp`, `greenroom_id`) VALUES (%s, %s, %s)"
         param = (value, timestamp, greenroom_id)
         cursor.execute(sql, param)
     conn.commit()
 
-def seed_soil_sensor():
+def seed_soil_sensor(id):
     conn = connect_db()
     cursor = conn.cursor()
-    for _ in range(100):  # Adjust the number of records you want to create
+    timestamp = datetime(2019,1,1)
+    for _ in range(1825):  # Adjust the number of records you want to create
         value = random.uniform(0,100)  # Example temperature range
-        greenroom_id = 1
-        # timestamp today across a range of 24 hours and the end date is the end of today
-        # timestamp = fake.date_time_between(start_date='today', end_date='today 23:59:59', tzinfo=None)
-        # timestamp = fake.date_time_between(start_date='-1d', end_date='+1d', tzinfo=None)
-        timestamp = fake.date_time_between(start_date='-5y', end_date='now', tzinfo=None)
+        greenroom_id = id
         
-        # timestamp = fake.date_time_between(start_date='-5y', end_date='now', tzinfo=None)
+        timestamp = timestamp + timedelta(days=1)
+            
         sql = "INSERT INTO `soil_moisture_sensor`(`value`, `timestamp`, `greenroom_id`) VALUES (%s, %s, %s)"
         param = (value, timestamp, greenroom_id)
         cursor.execute(sql, param)
     conn.commit()
 
-def seed_light_sensor():
+def seed_light_sensor(id):
     conn = connect_db()
     cursor = conn.cursor()
-    for _ in range(100):  # Adjust the number of records you want to create
+    timestamp = datetime(2019,1,1)
+    for _ in range(1825):  # Adjust the number of records you want to create
         value = random.uniform(100,1000)  # Example temperature range
-        greenroom_id = 1
-        # timestamp today across a range of 24 hours and the end date is the end of today
-        # timestamp = fake.date_time_between(start_date='today', end_date='today 23:59:59', tzinfo=None)
-        # timestamp = fake.date_time_between(start_date='-1d', end_date='+1d', tzinfo=None)
-        timestamp = fake.date_time_between(start_date='-5y', end_date='now', tzinfo=None)
-        # timestamp = fake.date_time_between(start_date='-5y', end_date='now', tzinfo=None)
+        greenroom_id = id
+        
+        timestamp = timestamp + timedelta(days=1)
+      
         sql = "INSERT INTO `light_sensor`(`value`, `timestamp`, `greenroom_id`) VALUES (%s, %s, %s)"
         param = (value, timestamp, greenroom_id)
         cursor.execute(sql, param)
     conn.commit()
 
-def seed_plant_height_size():
+def seed_plant_height_size(id):
     
-    size = 20
-    height = 20
-    # tiemstamp is the start of this month
-    now = datetime.now()
-    timestamp = datetime(now.year, 1, 1)
+    size = 1
+    height = 1
+    timestamp = datetime(2019,1,1)
+
     conn = connect_db()
     cursor = conn.cursor()
-    for i in range(30):  # Adjust the number of records you want to create
-
-        size = size + round(random.uniform(0,10),2) 
-        height = height + round(random.uniform(0,10),2) 
+    for i in range(1825):  # Adjust the number of records you want to create
+        greenroom_id = id
         
-        # add one day to this month
-        timestamp = timestamp + timedelta(days=30)
-        # timestamp =  datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
-        
-        print(height, timestamp)
+        if(random.randint(0,10) < 3):
+            size = size + round(random.uniform(0,1),2) 
+            height = height + round(random.uniform(0,1),2) 
+            
+        timestamp = timestamp + timedelta(days=1)
 
-        greenroom_id = 1
-        # timestamp = fake.date_time_between(start_date='today', end_date='today 23:59:59', tzinfo=None)
-        # timestamp = fake.date_time_between(start_date='-1d', end_date='+1d', tzinfo=None)
-        # timestamp = fake.date_time_between(start_date='-5y', end_date='now', tzinfo=None)
-        # timestamp = fake.date_time_between(start_date='-5y', end_date='now', tzinfo=None)
         sql = "INSERT INTO `plant_size_height`(`size`, `height`, `timestamp`, `greenroom_id`) VALUES (%s,%s,%s,%s)"
         param = (size, height, timestamp, greenroom_id)
         cursor.execute(sql, param)
     conn.commit()
     
-def seed_actuator_temp():
+def seed_actuator_temp(id):
     # tiemstamp is the start of this month
-    now = datetime.now()
-    timestamp = datetime(now.year, now.month, 1)
-    # timestamp = datetime(now.year, 1, 1)
+    timestamp = datetime(2019,1,1)
+    
     conn = connect_db()
     cursor = conn.cursor()
-    for i in range(30):  # Adjust the number of records you want to create
+    for i in range(1825):  # Adjust the number of records you want to create
+        greenroom_id = id
 
         value = random.randint(0,1)
-        # add one day to this month
-        timestamp = timestamp + timedelta(days=30)
-        # timestamp =  datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
-        greenroom_id = 1
-        # timestamp = fake.date_time_between(start_date='today', end_date='today 23:59:59', tzinfo=None)
-        # timestamp = fake.date_time_between(start_date='-1d', end_date='+1d', tzinfo=None)
-        # timestamp = fake.date_time_between(start_date='-5y', end_date='now', tzinfo=None)
-        # timestamp = fake.date_time_between(start_date='-5y', end_date='now', tzinfo=None)
-        sql = "INSERT INTO `light_actuator_activity`(`action`, `timestamp`, `greenroom_id`) VALUES (%s,%s,%s)"
+        timestamp = timestamp + timedelta(days=1)
+        
+        sql = "INSERT INTO `temperature_actuator_activity`(`action`, `timestamp`, `greenroom_id`) VALUES (%s,%s,%s)"
         param = (value, timestamp, greenroom_id)
         cursor.execute(sql, param)
     conn.commit()
     
+def seed_actuator_light(id):
+    # tiemstamp is the start of this month
+    timestamp = datetime(2019,1,1)
+    
+    conn = connect_db()
+    cursor = conn.cursor()
+    for i in range(1825):  # Adjust the number of records you want to create
+        greenroom_id = id
+
+        value = random.randint(0,1)
+        timestamp = timestamp + timedelta(days=1)
+        
+        sql = "INSERT INTO `light_actuator_activity`(`action`, `timestamp`, `greenroom_id`) VALUES (%s,%s,%s)"
+        param = (value, timestamp, greenroom_id)
+        cursor.execute(sql, param)
+    conn.commit()
 # Repeat the pattern for other sensor tables (air_moisture_sensor, soil_moisture_sensor, water_level_sensor)
 
+
+def seed_actuator_soil(id):
+    # tiemstamp is the start of this month
+    timestamp = datetime(2019,1,1)
+    
+    conn = connect_db()
+    cursor = conn.cursor()
+    for i in range(1825):  # Adjust the number of records you want to create
+        greenroom_id = id
+
+        value = random.randint(0,1)
+        timestamp = timestamp + timedelta(days=1)
+        
+        sql = "INSERT INTO `soil_moisture_actuator_activity`(`action`, `timestamp`, `greenroom_id`) VALUES (%s,%s,%s)"
+        param = (value, timestamp, greenroom_id)
+        cursor.execute(sql, param)
+    conn.commit()
+    
 def seed_greenroom():
     conn = connect_db()
     cursor = conn.cursor()
@@ -137,9 +152,34 @@ def seed_greenroom():
 
 # Create seed functions for other tables (e.g., temperature_actuator_activity, light_actuator_activity, etc.)
 
+
+# seed_temperature_sensor(1)
+# seed_temperature_sensor(2)
+
+# seed_soil_sensor(1)
+# seed_soil_sensor(2)
+
+# seed_light_sensor(1)
+# seed_light_sensor(2)
+
+seed_plant_height_size(1)
+seed_plant_height_size(2)
+
+# seed_actuator_temp(1)
+# seed_actuator_temp(2)
+
+# seed_actuator_light(1)
+# seed_actuator_light(2)
+
+# seed_actuator_soil(1)
+# seed_actuator_soil(2)
+
+
+
+
 # Example usage:
 # seed_temperature_sensor()
-seed_actuator_temp()
+# seed_actuator_temp()
 # Call other seed functions for different sensor tables
 # seed_greenroom()
 # Call seed functions for other tables
