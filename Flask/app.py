@@ -12,7 +12,7 @@ from AWSIoTPythonSDK.MQTTLib import AWSIoTMQTTClient
 import firebase_admin
 from firebase_admin import credentials, storage
 
-from aws_rds_com import *
+import aws_rds_com as db
 from dotenv import load_dotenv
 
 AWS_CLIENT = os.getenv("AWS_CLIENT")
@@ -65,11 +65,11 @@ def on_message(client, userdata, message):
     greenroom_id = thirdSplit[1]
 
     if table_type == "act":
-        insert_activity(data_type, value, greenroom_id)
+        db.insert_activity(data_type, value, greenroom_id)
     elif table_type == "sensor":
-        insert_sensor(data_type, value, greenroom_id)
+        db.insert_sensor(data_type, value, greenroom_id)
     elif table_type == "mode":
-        update_mode(data_type, value, greenroom_id)
+        db.update_mode(data_type, value, greenroom_id)
 
 
 def prepare_sidebar():
@@ -94,7 +94,7 @@ def prepare_sidebar():
 @app.route('/')
 def index():
     
-    greenrooms= get_greenroom_all()
+    greenrooms= db.get_greenroom_all()
     for gr in greenrooms:
         soil_chart_label = []
         light_chart_label = []
@@ -103,19 +103,19 @@ def index():
         light_chart_data = []
         temperature_chart_data = []
         
-        for i in get_record_greenroom(gr["greenroom_id"],True,"soil_moisture"):
+        for i in db.get_record_greenroom(gr["greenroom_id"],True,"soil_moisture"):
             soil_chart_label.append(i["timestamp"])
             soil_chart_data.append(i["value"])
         
-        for i in get_record_greenroom(gr["greenroom_id"],True,"light"):
+        for i in db.get_record_greenroom(gr["greenroom_id"],True,"light"):
             light_chart_label.append(i["timestamp"])
             light_chart_data.append(i["value"])
             
-        for i in get_record_greenroom(gr["greenroom_id"],True,"temperature"):
+        for i in db.get_record_greenroom(gr["greenroom_id"],True,"temperature"):
             temperature_chart_label.append(i["timestamp"])
             temperature_chart_data.append(i["value"])
             
-        current_water_level = get_record_greenroom(gr["greenroom_id"],True,"level")
+        current_water_level = db.get_record_greenroom(gr["greenroom_id"],True,"level")
         # get the last one
         if len(current_water_level) > 0:
             current_water_level = current_water_level[0]["value"]
@@ -126,14 +126,19 @@ def index():
         else:
             current_water_level = False
             
-        greenrooms[greenrooms.index(gr)]["soil_chart_data"] = soil_chart_data
-        greenrooms[greenrooms.index(gr)]["light_chart_data"] = light_chart_data
-        greenrooms[greenrooms.index(gr)]["temperature_chart_data"] = temperature_chart_data
+        # greenrooms[greenrooms.index(gr)]["soil_chart_data"] = soil_chart_data
+        # greenrooms[greenrooms.index(gr)]["light_chart_data"] = light_chart_data
+        # greenrooms[greenrooms.index(gr)]["temperature_chart_data"] = temperature_chart_data
         
-        greenrooms[greenrooms.index(gr)]["soil_chart_label"] = soil_chart_label
-        greenrooms[greenrooms.index(gr)]["light_chart_label"] = light_chart_label
-        greenrooms[greenrooms.index(gr)]["temperature_chart_label"] = temperature_chart_label
-        
+        # greenrooms[greenrooms.index(gr)]["soil_chart_label"] = soil_chart_label
+        # greenrooms[greenrooms.index(gr)]["light_chart_label"] = light_chart_label
+        # greenrooms[greenrooms.index(gr)]["temperature_chart_label"] = temperature_chart_label
+        greenrooms[greenrooms.index(gr)]["temperature"] = db.get_one_month_record("temperature_sensor",gr["greenroom_id"])
+        greenrooms[greenrooms.index(gr)]["light"] = db.get_one_month_record("light_sensor",gr["greenroom_id"])
+        greenrooms[greenrooms.index(gr)]["soil"] = db.get_one_month_record("soil_moisture_sensor",gr["greenroom_id"])
+        greenrooms[greenrooms.index(gr)]["current_temp_value"] = db.get_latest_sensor_data("temperature_sensor",gr["greenroom_id"])
+        greenrooms[greenrooms.index(gr)]["current_light_value"] = db.get_latest_sensor_data("light_sensor",gr["greenroom_id"])
+        greenrooms[greenrooms.index(gr)]["current_soil_value"] = db.get_latest_sensor_data("soil_moisture_sensor",gr["greenroom_id"])
         greenrooms[greenrooms.index(gr)]["water_level"] = current_water_level
         
     data_template = {
@@ -170,7 +175,7 @@ def create_greenroom_page():
             image_url = file.filename
         
         # Create the greenroom in your database, including the image URL
-        create_greenroom(name, location, description, image_url)
+        db.create_greenroom(name, location, description, image_url)
             
     data_template = {
     # "greenroom": greenrooms,
@@ -190,22 +195,22 @@ def page_greenroom_detail(id):
         if value != None:
             msg = f"{param}:{value}"
             print(msg)
-            insert_activity(param,value,id)
+            db.insert_activity(param,value,id)
             if(param != "water"):
-                update_mode(param, "manual", id)
+                db.update_mode(param, "manual", id)
             myMQTTClient.publish(actuator_topic, msg)
 
-    greenroom = get_record_greenroom_all_actuator_one(id)
-    for i in get_record_greenroom(id,type="soil_moisture"):
+    greenroom = db.get_record_greenroom_all_actuator_one(id)
+    for i in db.get_record_greenroom(id,type="soil_moisture"):
         greenroom["moisture"] = i["value"]
         
-    for i in get_record_greenroom(id,type="light"):
+    for i in db.get_record_greenroom(id,type="light"):
         greenroom["light"] = i["value"]
         
-    for i in get_record_greenroom(id,type="temperature"):
+    for i in db.get_record_greenroom(id,type="temperature"):
         greenroom["temperature"] = i["value"]
         
-    current_water_level = get_record_greenroom(id,type="level")
+    current_water_level = db.get_record_greenroom(id,type="level")
     # get the last one
     if len(current_water_level) > 0:
         current_water_level = str(current_water_level[0]["value"])
@@ -219,10 +224,10 @@ def page_greenroom_detail(id):
 
     greenroom["water_level"] = current_water_level
     
-    greenroom["name"] = get_greenroom(id)[0]["name"]
-    greenroom["image"] = get_greenroom(id)[0]["image"]
+    greenroom["name"] = db.get_greenroom(id)[0]["name"]
+    greenroom["image"] = db.get_greenroom(id)[0]["image"]
 
-    greenroom.update(get_record_greenroom_all_actuator_mode_one(id))
+    greenroom.update(db.get_record_greenroom_all_actuator_mode_one(id))
     
     print(greenroom)
     
@@ -234,52 +239,81 @@ def page_greenroom_detail(id):
     return render_template('greenroom-detail.html', data=data_template)
 
 
-@app.route('/report_test', methods=['GET', 'POST'])
+@app.route('/report_test_1', methods=['GET', 'POST'])
 def report_test():
-    greenrooms= get_greenroom("1")
-    for gr in greenrooms:
-        soil_chart_label = []
-        light_chart_label = []
-        temperature_chart_label = []
-        soil_chart_data = []
-        light_chart_data = []
-        temperature_chart_data = []
-        
-        for i in get_record_greenroom(gr["greenroom_id"],False,"soil_moisture"):
-            soil_chart_label.append(i["timestamp"])
-            soil_chart_data.append(i["value"])
-        
-        for i in get_record_greenroom(gr["greenroom_id"],False,"light"):
-            light_chart_label.append(i["timestamp"])
-            light_chart_data.append(i["value"])
-            
-        for i in get_record_greenroom(gr["greenroom_id"],False,"temperature"):
-            temperature_chart_label.append(i["timestamp"])
-            temperature_chart_data.append(i["value"])
-            
-        current_water_level = get_record_greenroom(gr["greenroom_id"],False,"level")
-        # get the last one
-        if len(current_water_level) > 0:
-            current_water_level = current_water_level[0]["value"]
-            if current_water_level == "0":
-                current_water_level = True
-            else:
-                current_water_level = False
-        else:
-            current_water_level = False
-            
-        greenrooms[greenrooms.index(gr)]["soil_chart_data"] = soil_chart_data
-        greenrooms[greenrooms.index(gr)]["light_chart_data"] = light_chart_data
-        greenrooms[greenrooms.index(gr)]["temperature_chart_data"] = temperature_chart_data
-        
-        greenrooms[greenrooms.index(gr)]["soil_chart_label"] = soil_chart_label
-        greenrooms[greenrooms.index(gr)]["light_chart_label"] = light_chart_label
-        greenrooms[greenrooms.index(gr)]["temperature_chart_label"] = temperature_chart_label
-        
-        greenrooms[greenrooms.index(gr)]["water_level"] = current_water_level
-        
+    greenroom_id = 1
+    greenrooms= db.get_greenroom(greenroom_id)
+    
+    one_day_temp = db.get_one_day_record("temperature_sensor",greenroom_id)
+    one_day_light = db.get_one_day_record("light_sensor",greenroom_id)
+    one_day_soil = db.get_one_day_record("soil_moisture_sensor",greenroom_id)
+    
+    one_month_temp = db.get_one_month_record("temperature_sensor",greenroom_id)
+    one_month_light = db.get_one_month_record("light_sensor",greenroom_id)
+    one_month_soil = db.get_one_month_record("soil_moisture_sensor",greenroom_id)
+    
+    one_year_temp = db.get_one_year_record("temperature_sensor",greenroom_id)
+    one_year_light = db.get_one_year_record("light_sensor",greenroom_id)
+    one_year_soil = db.get_one_year_record("soil_moisture_sensor",greenroom_id)
+    
+    life_temp = db.get_life_time_record("temperature_sensor",greenroom_id)
+    life_light = db.get_life_time_record("light_sensor",greenroom_id)
+    life_soil = db.get_life_time_record("soil_moisture_sensor",greenroom_id) 
+    
+    one_day_act_temp = db.get_actuator_one_day_record("temperature_actuator_activity",greenroom_id)
+    one_day_act_light = db.get_actuator_one_day_record("light_actuator_activity",greenroom_id)
+    one_day_act_soil = db.get_actuator_one_day_record("soil_moisture_actuator_activity",greenroom_id)
+    
+    one_month_act_temp = db.get_actuator_one_month_record("temperature_actuator_activity",greenroom_id)
+    one_month_act_light = db.get_actuator_one_month_record("light_actuator_activity",greenroom_id)
+    one_month_act_soil = db.get_actuator_one_month_record("soil_moisture_actuator_activity",greenroom_id)
+    
+    one_year_act_temp = db.get_actuator_one_year_record("temperature_actuator_activity",greenroom_id)
+    one_year_act_light = db.get_actuator_one_year_record("light_actuator_activity",greenroom_id)
+    one_year_act_soil = db.get_actuator_one_year_record("soil_moisture_actuator_activity",greenroom_id) 
+    
+    life_act_temp = db.get_actuator_life_time_record("temperature_actuator_activity",greenroom_id)
+    life_act_light = db.get_actuator_life_time_record("light_actuator_activity",greenroom_id)
+    life_act_soil = db.get_actuator_life_time_record("soil_moisture_actuator_activity",greenroom_id)
+    
+    one_day_size_height = db.get_plant_size_and_height_one_day_record(greenroom_id)
+    one_month_size_height = db.get_plant_size_and_height_one_month_record(greenroom_id)
+    one_year_size_height = db.get_plant_size_and_height_one_year_record(greenroom_id)
+    life_size_height = db.get_plant_size_and_height_lifetime_record(greenroom_id)
+    
+    plant_image = db.get_plant_image(greenroom_id)
+    # plant_image string to json
     data_template = {
-        "greenroom": greenrooms[0],
+        "one_day_temp": one_day_temp,
+        "one_day_light": one_day_light,
+        "one_day_soil": one_day_soil,
+        "one_month_temp": one_month_temp,
+        "one_month_light": one_month_light,
+        "one_month_soil": one_month_soil,
+        "one_year_temp": one_year_temp,
+        "one_year_light": one_year_light,
+        "one_year_soil": one_year_soil,
+        "life_temp": life_temp,
+        "life_light": life_light,
+        "life_soil": life_soil,
+        "one_day_act_temp": one_day_act_temp,
+        "one_day_act_light": one_day_act_light,
+        "one_day_act_soil": one_day_act_soil,
+        "one_month_act_temp": one_month_act_temp,
+        "one_month_act_light": one_month_act_light,
+        "one_month_act_soil": one_month_act_soil,
+        "one_year_act_temp": one_year_act_temp,
+        "one_year_act_light": one_year_act_light,
+        "one_year_act_soil": one_year_act_soil,
+        "life_act_temp": life_act_temp,
+        "life_act_light": life_act_light,
+        "life_act_soil": life_act_soil,
+        "one_day_size_height": one_day_size_height,
+        "one_month_size_height": one_month_size_height,
+        "one_year_size_height": one_year_size_height,
+        "life_size_height": life_size_height,
+        "plant_image": plant_image,
+        "greenrooms": greenrooms[0],
         "sidebar": prepare_sidebar()
         
     }

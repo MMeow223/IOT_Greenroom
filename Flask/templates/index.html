@@ -56,35 +56,52 @@
   $(".liveToast").toast("show");
 </script>
 <script>
-  var data = {};
-  // Configuration options
-  var options = {
-    legend: {
-      display: false,
-    },
-    title: {
-      display: true,
-      text: "Temperature",
-    },
-    maintainAspectRatio: false, // This prevents the chart from maintaining a fixed aspect ratio
-    responsive: true,
-    scales: {
-      xAxes: [
+  function TimelineChart(sensor_data, x_legend, chart_id) {
+    //clear the chart
+    document.getElementById(chart_id).innerHTML = "";
+
+    // Initialize the area chart with ApexCharts
+    new ApexCharts(document.getElementById(chart_id), {
+      chart: {
+        height: 150,
+        type: "area",
+        toolbar: {
+          show: false,
+        },
+      },
+      series: [
         {
-          ticks: {
-            display: false,
-          },
+          name: "Series 1",
+          data: sensor_data.map(function (e) {
+            return e.value;
+          }),
         },
       ],
-      yAxes: [
-        {
-          ticks: {
-            display: false,
-          },
+      xaxis: {
+        labels: {
+          show: false, // Hide x-axis labels
         },
-      ],
-    },
-  };
+        categories: sensor_data.map(function (e) {
+          return String(e.label);
+        }),
+      },
+      yaxis: {
+        labels: {
+          show: false, // Hide y-axis labels
+        },
+      },
+      fill: {
+        opacity: 0.4,
+        type: "solid",
+      },
+      stroke: {
+        curve: "smooth",
+      },
+      dataLabels: {
+        enabled: false, // Hide data point labels
+      },
+    }).render();
+  }
 </script>
 
 {% for rec in data.chart_data %} {% for r in rec %}
@@ -110,124 +127,49 @@
       <div class="d-flex">
         <img
           class="card-img-top w-25 h-25"
-          src="https://firebasestorage.googleapis.com/v0/b/iot-greenroom.appspot.com/o/greenroom_images%2F{{gr.image}}?alt=media"
+          src="{{gr.image}}"
           alt="Card image cap"
         />
-        <h5 class="card-title mx-auto my-auto">{{ gr.name }}</h5>
+        <h3 class="card-title mx-auto my-auto">{{ gr.name }}</h3>
       </div>
       <div class="card-body">
         <div class="d-flex justify-content-between">
-          <div class="mb-5" style="width: 110px; height: 110px">
-            <p id="current_data{{gr.greenroom_id}}0" class="text-center">0</p>
-            <canvas id="lineChart{{ gr.greenroom_id }}0"></canvas>
+          <div class="mb-5" style="width: 200px; height: auto">
+            <p class="title-current-data">Temp</p>
+            <h1 id="current_data{{gr.greenroom_id}}0" class="text-center">
+              {{gr.current_temp_value}}
+            </h1>
+            <div id="lineChart{{ gr.greenroom_id }}0"></div>
           </div>
-          <div class="mb-5" style="width: 110px; height: 110px">
-            <p id="current_data{{gr.greenroom_id}}1" class="text-center">0</p>
-            <canvas id="lineChart{{ gr.greenroom_id }}1"></canvas>
+          <div class="mb-5" style="width: 200px; height: auto">
+            <p class="title-current-data">Light</p>
+            <h1 id="current_data{{gr.greenroom_id}}1" class="text-center">
+              {{gr.current_light_value}}
+            </h1>
+            <div id="lineChart{{ gr.greenroom_id }}1"></div>
           </div>
-          <div class="mb-5" style="width: 110px; height: 110px">
-            <p id="current_data{{gr.greenroom_id}}2" class="text-center">0</p>
-            <canvas id="lineChart{{ gr.greenroom_id }}2"></canvas>
+          <div class="mb-5" style="width: 200px; height: auto">
+            <p class="title-current-data">Soil</p>
+            <h1 id="current_data{{gr.greenroom_id}}2" class="text-center">
+              {{gr.current_soil_value}}
+            </h1>
+            <div id="lineChart{{ gr.greenroom_id }}2"></div>
           </div>
           <script>
-            var soil_label = JSON.parse(
-              "{{ gr.soil_chart_label }}".replace(/&#39;/g, '"')
+            TimelineChart(
+              JSON.parse("{{ gr.temperature }}".replace(/&#39;/g, '"')),
+              "Year",
+              "lineChart{{ gr.greenroom_id }}0"
             );
-            var light_label = JSON.parse(
-              "{{ gr.light_chart_label }}".replace(/&#39;/g, '"')
+            TimelineChart(
+              JSON.parse("{{ gr.light }}".replace(/&#39;/g, '"')),
+              "Year",
+              "lineChart{{ gr.greenroom_id }}1"
             );
-            var temp_label = JSON.parse(
-              "{{ gr.temperature_chart_label }}".replace(/&#39;/g, '"')
-            );
-
-            var soil_data = JSON.parse(
-              "{{ gr.soil_chart_data }}".replace(/&#39;/g, '"')
-            );
-            var light_data = JSON.parse(
-              "{{ gr.light_chart_data }}".replace(/&#39;/g, '"')
-            );
-            var temp_data = JSON.parse(
-              "{{ gr.temperature_chart_data }}".replace(/&#39;/g, '"')
-            );
-
-            document.getElementById(
-              "current_data{{gr.greenroom_id}}0"
-            ).innerHTML = soil_data[soil_data.length - 1];
-
-            document.getElementById(
-              "current_data{{gr.greenroom_id}}1"
-            ).innerHTML = light_data[light_data.length - 1];
-
-            document.getElementById(
-              "current_data{{gr.greenroom_id}}2"
-            ).innerHTML = temp_data[temp_data.length - 1];
-
-            chart_1_data = {
-              labels: soil_label,
-              datasets: [
-                {
-                  data: soil_data,
-                  borderColor: "rgb(75, 192, 192)",
-                  borderWidth: 2,
-                  fill: false, // Set fill to false to show only the line
-                },
-              ],
-            };
-            chart_2_data = {
-              labels: light_label,
-              datasets: [
-                {
-                  data: light_data,
-                  borderColor: "rgb(75, 192, 192)",
-                  borderWidth: 2,
-                  fill: false, // Set fill to false to show only the line
-                },
-              ],
-            };
-            chart_3_data = {
-              labels: temp_label,
-              datasets: [
-                {
-                  data: temp_data,
-                  borderColor: "rgb(75, 192, 192)",
-                  borderWidth: 2,
-                  fill: false, // Set fill to false to show only the line
-                },
-              ],
-            };
-
-            options.title.text = "Soil Moisture";
-            var chart = new Chart(
-              document
-                .getElementById("lineChart{{ gr.greenroom_id }}0")
-                .getContext("2d"),
-              {
-                type: "line",
-                data: chart_1_data,
-                options: options,
-              }
-            );
-            options.title.text = "Light";
-            var chart = new Chart(
-              document
-                .getElementById("lineChart{{ gr.greenroom_id }}1")
-                .getContext("2d"),
-              {
-                type: "line",
-                data: chart_2_data,
-                options: options,
-              }
-            );
-            options.title.text = "Temperature";
-            var chart = new Chart(
-              document
-                .getElementById("lineChart{{ gr.greenroom_id }}2")
-                .getContext("2d"),
-              {
-                type: "line",
-                data: chart_3_data,
-                options: options,
-              }
+            TimelineChart(
+              JSON.parse("{{ gr.soil }}".replace(/&#39;/g, '"')),
+              "Year",
+              "lineChart{{ gr.greenroom_id }}2"
             );
           </script>
         </div>

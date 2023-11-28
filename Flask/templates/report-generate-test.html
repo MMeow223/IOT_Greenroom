@@ -28,105 +28,171 @@
       integrity="sha256-6H5VB5QyLldKH9oMFUmjxw2uWpPZETQXpCkBaDjquMs="
       crossorigin="anonymous"
     ></script>
+
+    <!-- Slideshow -->
+    <script src="
+    https://cdn.jsdelivr.net/npm/@splidejs/splide@4.1.4/dist/js/splide.min.js
+    "></script>
+    <link
+      href="
+    https://cdn.jsdelivr.net/npm/@splidejs/splide@4.1.4/dist/css/splide.min.css
+    "
+      rel="stylesheet"
+    />
+
     <!-- Jquery -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
-    <!-- Chartjs -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js"></script>
+
+    <!-- ApexChart -->
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
     <title>Report</title>
   </head>
-  <body class="d-flex">
+  <body id="screenshotTarget" class="d-flex">
     <div class="container-fluid p-5">
       <!-- content -->
       <div class="">
         <div id="report" class="p-5">
-          <h4>{{data.greenroom.name }} Report</h4>
+          <h1>{{data.greenrooms.name }} Report</h1>
+          <!-- button to switch between one day, one month, one year and life -->
+
+          <div class="btn-group" role="group" aria-label="Basic example">
+            <button
+              type="button"
+              class="btn btn-success"
+              id="one_day_btn"
+              onclick="OneDay()"
+            >
+              One Day
+            </button>
+            <button
+              type="button"
+              class="btn btn-success"
+              id="one_month_btn"
+              onclick="OneMonth()"
+            >
+              One Month
+            </button>
+            <button
+              type="button"
+              class="btn btn-success"
+              id="one_year_btn"
+              onclick="OneYear()"
+            >
+              One Year
+            </button>
+            <button
+              type="button"
+              class="btn btn-success"
+              id="life_btn"
+              onclick="LifeTime()"
+            >
+              Lifetime
+            </button>
+            <button
+              type="button"
+              class="btn btn-success"
+              onclick="captureScreenshot()"
+            >
+              Download
+            </button>
+          </div>
           <div class="row">
             <div class="greenroom-container p-1 m-2">
               <div class="card-body">
-                <h6>Environment Monitoring</h6>
-                <div class="d-flex flex-column">
-                  <p>
-                    Soil Moisture Data for Date Range (20 Septermber -11
-                    November)
-                  </p>
-                  <div class="d-flex">
-                    <h5 class="card m-2 p-1">Min: 30</h5>
-                    <h5 class="card m-2 p-1">Max: 30</h5>
-                    <h5 class="card m-2 p-1">Avg: 30</h5>
-                    <h5 class="card m-2 p-1">Spike: 30</h5>
+                <h1>Plant Size & Height</h1>
+                <div class="d-flex flex-row">
+                  <div class="mb-5 w-50 p-4 card m-2">
+                    <h4>Plant Size and Height Chart</h4>
+                    <div id="bubbleChart0"></div>
                   </div>
-                  <div class="mb-5 w-50" style="width: auto; height: 110px">
-                    <canvas id="lineChart0"></canvas>
+                  <!-- slideshow -->
+                  {% if data.plant_image != [] %}
+                  <div class="w-50 p-2">
+                    <section
+                      id="main-carousel"
+                      class="splide"
+                      aria-label="My Awesome Gallery"
+                    >
+                      <div class="splide__track">
+                        <ul class="splide__list">
+                          <!-- for -->
+                          {% for image in data.plant_image %}
+                          <li class="splide__slide">
+                            <img
+                              class="w-100 card"
+                              src="{{image}}"
+                              alt="{{image}}"
+                            />
+                          </li>
+                          {% endfor %}
+                        </ul>
+                      </div>
+                    </section>
+
+                    <ul id="thumbnails" class="thumbnails">
+                      {% for image in data.plant_image %}
+                      <li class="thumbnail">
+                        <img src="{{image}}" alt="{{image}}" />
+                      </li>
+                      {% endfor %}
+                    </ul>
                   </div>
-                  <p>
-                    Environment Light Data for Date Range (20 Septermber -11
-                    November)
-                  </p>
-                  <div class="d-flex">
-                    <h5 class="card m-2 p-1">Min: 30</h5>
-                    <h5 class="card m-2 p-1">Max: 30</h5>
-                    <h5 class="card m-2 p-1">Avg: 30</h5>
-                    <h5 class="card m-2 p-1">Spike: 30</h5>
+                  {% endif %}
+                </div>
+
+                <h1>Average Sensor Value</h1>
+                <div class="d-flex flex-row">
+                  <!-- Temperature -->
+                  <div
+                    class="mb-5 w-50 p-4 card m-2"
+                    style="width: 30vw; height: auto"
+                  >
+                    <h4>Temperature Sensor Data</h4>
+                    <!-- <canvas id="lineChart0"></canvas> -->
+                    <div id="lineChart0"></div>
                   </div>
-                  <div class="mb-5 w-50" style="width: auto; height: 110px">
-                    <canvas id="lineChart1"></canvas>
+                  <!-- Light -->
+                  <div
+                    class="mb-5 w-50 p-4 card m-2"
+                    style="width: 30vw; height: auto"
+                  >
+                    <h4>Light Sensor Data</h4>
+                    <div id="lineChart1"></div>
                   </div>
-                  <p>
-                    Environment Temperature Data for Date Range (20 Septermber
-                    -11 November)
-                  </p>
-                  <div class="d-flex">
-                    <h5 class="card m-2 p-1">Min: 30</h5>
-                    <h5 class="card m-2 p-1">Max: 30</h5>
-                    <h5 class="card m-2 p-1">Avg: 30</h5>
-                    <h5 class="card m-2 p-1">Spike: 30</h5>
-                  </div>
-                  <div class="mb-5 w-50" style="width: auto; height: 110px">
-                    <canvas id="lineChart2"></canvas>
+                  <!-- Soil -->
+                  <div
+                    class="mb-5 w-50 p-4 card m-2"
+                    style="width: 30vw; height: auto"
+                  >
+                    <h4>Soil Sensor Data</h4>
+                    <div id="lineChart2"></div>
                   </div>
                 </div>
-              </div>
-              <div class="card-body">
-                <h6>Environment Monitoring</h6>
-                <div class="d-flex flex-column">
-                  <p>
-                    Soil Moisture Data for Date Range (20 Septermber -11
-                    November)
-                  </p>
-                  <div class="d-flex">
-                    <h5 class="card m-2 p-1">Min: 30</h5>
-                    <h5 class="card m-2 p-1">Max: 30</h5>
-                    <h5 class="card m-2 p-1">Avg: 30</h5>
-                    <h5 class="card m-2 p-1">Spike: 30</h5>
+                <h1>Actuator Monitoring</h1>
+                <div class="d-flex flex-row">
+                  <!-- Temperature -->
+                  <div
+                    class="mb-5 w-50 p-4 card m-2"
+                    style="width: 30vw; height: auto"
+                  >
+                    <h4>Temperature Actuator Data</h4>
+                    <div id="pieChart0"></div>
                   </div>
-                  <div class="mb-5 w-50" style="width: auto; height: 110px">
-                    <canvas id="lineChart3"></canvas>
+                  <!-- Light -->
+                  <div
+                    class="mb-5 w-50 p-4 card m-2"
+                    style="width: 30vw; height: auto"
+                  >
+                    <h4>Light Actuator Data</h4>
+                    <div id="pieChart1"></div>
                   </div>
-                  <p>
-                    Environment Light Data for Date Range (20 Septermber -11
-                    November)
-                  </p>
-                  <div class="d-flex">
-                    <h5 class="card m-2 p-1">Min: 30</h5>
-                    <h5 class="card m-2 p-1">Max: 30</h5>
-                    <h5 class="card m-2 p-1">Avg: 30</h5>
-                    <h5 class="card m-2 p-1">Spike: 30</h5>
-                  </div>
-                  <div class="mb-5 w-50" style="width: auto; height: 110px">
-                    <canvas id="lineChart4"></canvas>
-                  </div>
-                  <p>
-                    Environment Temperature Data for Date Range (20 Septermber
-                    -11 November)
-                  </p>
-                  <div class="d-flex">
-                    <h5 class="card m-2 p-1">Min: 30</h5>
-                    <h5 class="card m-2 p-1">Max: 30</h5>
-                    <h5 class="card m-2 p-1">Avg: 30</h5>
-                    <h5 class="card m-2 p-1">Spike: 30</h5>
-                  </div>
-                  <div class="mb-5 w-50" style="width: auto; height: 110px">
-                    <canvas id="lineChart5"></canvas>
+                  <!-- Soil -->
+                  <div
+                    class="mb-5 w-50 p-4 card m-2"
+                    style="width: 30vw; height: auto"
+                  >
+                    <h4>Soil Actuator Data</h4>
+                    <div id="pieChart2"></div>
                   </div>
                 </div>
               </div>
@@ -135,7 +201,321 @@
         </div>
       </div>
     </div>
-    <script src="{{ url_for('static', filename='js/report_gen.js') }}"></script>
+
+    <script>
+      function captureScreenshot() {
+        html2canvas(document.getElementById("screenshotTarget")).then(function (
+          canvas
+        ) {
+          // Convert the canvas to an image and open it in a new window
+          var image = canvas.toDataURL();
+          console.log(image);
+
+          //download the image
+          var link = document.createElement("a");
+          link.download = "report.png";
+          link.href = image;
+          link.click();
+        });
+      }
+
+      function OneDay() {
+        document.getElementById("one_day_btn").classList.add("active");
+        document.getElementById("one_month_btn").classList.remove("active");
+        document.getElementById("one_year_btn").classList.remove("active");
+        document.getElementById("life_btn").classList.remove("active");
+        BubbleChart(
+          JSON.parse("{{ data.one_day_size_height }}".replace(/&#39;/g, '"')),
+          "bubbleChart0"
+        );
+        TimelineChart(
+          JSON.parse("{{ data.one_day_temp }}".replace(/&#39;/g, '"')),
+          "Hour in Day",
+          "lineChart0"
+        );
+        TimelineChart(
+          JSON.parse("{{ data.one_day_light }}".replace(/&#39;/g, '"')),
+          "Hour in Day",
+          "lineChart1"
+        );
+        TimelineChart(
+          JSON.parse("{{ data.one_day_soil }}".replace(/&#39;/g, '"')),
+          "Hour in Day",
+          "lineChart2"
+        );
+        PieChart(
+          JSON.parse("{{ data.one_day_act_temp }}".replace(/&#39;/g, '"')),
+          "pieChart0"
+        );
+        PieChart(
+          JSON.parse("{{ data.one_day_act_light }}".replace(/&#39;/g, '"')),
+          "pieChart1"
+        );
+        PieChart(
+          JSON.parse("{{ data.one_day_act_soil }}".replace(/&#39;/g, '"')),
+          "pieChart2"
+        );
+      }
+
+      function OneMonth() {
+        document.getElementById("one_day_btn").classList.remove("active");
+        document.getElementById("one_month_btn").classList.add("active");
+        document.getElementById("one_year_btn").classList.remove("active");
+        document.getElementById("life_btn").classList.remove("active");
+
+        BubbleChart(
+          JSON.parse("{{ data.one_month_size_height }}".replace(/&#39;/g, '"')),
+          "bubbleChart0"
+        );
+        TimelineChart(
+          JSON.parse("{{ data.one_month_temp }}".replace(/&#39;/g, '"')),
+          "Day in Month",
+          "lineChart0"
+        );
+        TimelineChart(
+          JSON.parse("{{ data.one_month_light }}".replace(/&#39;/g, '"')),
+          "Day in Month",
+          "lineChart1"
+        );
+        TimelineChart(
+          JSON.parse("{{ data.one_month_soil }}".replace(/&#39;/g, '"')),
+          "Day in Month",
+          "lineChart2"
+        );
+        PieChart(
+          JSON.parse("{{ data.one_month_act_temp }}".replace(/&#39;/g, '"')),
+          "pieChart0"
+        );
+        PieChart(
+          JSON.parse("{{ data.one_month_act_light }}".replace(/&#39;/g, '"')),
+          "pieChart1"
+        );
+        PieChart(
+          JSON.parse("{{ data.one_month_act_soil }}".replace(/&#39;/g, '"')),
+          "pieChart2"
+        );
+      }
+
+      function OneYear() {
+        document.getElementById("one_day_btn").classList.remove("active");
+        document.getElementById("one_month_btn").classList.remove("active");
+        document.getElementById("one_year_btn").classList.add("active");
+        document.getElementById("life_btn").classList.remove("active");
+        BubbleChart(
+          JSON.parse("{{ data.one_year_size_height }}".replace(/&#39;/g, '"')),
+          "bubbleChart0"
+        );
+        TimelineChart(
+          JSON.parse("{{ data.one_year_temp }}".replace(/&#39;/g, '"')),
+          "Month in Year",
+          "lineChart0"
+        );
+        TimelineChart(
+          JSON.parse("{{ data.one_year_light }}".replace(/&#39;/g, '"')),
+          "Month in Year",
+          "lineChart1"
+        );
+        TimelineChart(
+          JSON.parse("{{ data.one_year_soil }}".replace(/&#39;/g, '"')),
+          "Month in Year",
+          "lineChart2"
+        );
+        PieChart(
+          JSON.parse("{{ data.one_year_act_temp }}".replace(/&#39;/g, '"')),
+          "pieChart0"
+        );
+        PieChart(
+          JSON.parse("{{ data.one_year_act_light }}".replace(/&#39;/g, '"')),
+          "pieChart1"
+        );
+        PieChart(
+          JSON.parse("{{ data.one_year_act_soil }}".replace(/&#39;/g, '"')),
+          "pieChart2"
+        );
+      }
+
+      function LifeTime() {
+        document.getElementById("one_day_btn").classList.remove("active");
+        document.getElementById("one_month_btn").classList.remove("active");
+        document.getElementById("one_year_btn").classList.remove("active");
+        document.getElementById("life_btn").classList.add("active");
+        BubbleChart(
+          JSON.parse("{{ data.life_size_height }}".replace(/&#39;/g, '"')),
+          "bubbleChart0"
+        );
+        TimelineChart(
+          JSON.parse("{{ data.life_temp }}".replace(/&#39;/g, '"')),
+          "Year",
+          "lineChart0"
+        );
+        TimelineChart(
+          JSON.parse("{{ data.life_light }}".replace(/&#39;/g, '"')),
+          "Year",
+          "lineChart1"
+        );
+        TimelineChart(
+          JSON.parse("{{ data.life_soil }}".replace(/&#39;/g, '"')),
+          "Year",
+          "lineChart2"
+        );
+        PieChart(
+          JSON.parse("{{ data.life_act_temp }}".replace(/&#39;/g, '"')),
+          "pieChart0"
+        );
+        PieChart(
+          JSON.parse("{{ data.life_act_light }}".replace(/&#39;/g, '"')),
+          "pieChart1"
+        );
+        PieChart(
+          JSON.parse("{{ data.life_act_soil }}".replace(/&#39;/g, '"')),
+          "pieChart2"
+        );
+      }
+
+      function TimelineChart(sensor_data, x_legend, chart_id) {
+        //clear the chart
+        document.getElementById(chart_id).innerHTML = "";
+
+        // Initialize the area chart with ApexCharts
+        new ApexCharts(document.getElementById(chart_id), {
+          chart: {
+            height: 350,
+            type: "area",
+          },
+          series: [
+            {
+              name: "Series 1",
+              data: sensor_data.map(function (e) {
+                return e.value;
+              }),
+            },
+          ],
+          xaxis: {
+            categories: sensor_data.map(function (e) {
+              return String(e.label);
+            }),
+          },
+          fill: {
+            opacity: 0.4, // Adjust the opacity to control the area under the curve
+            type: "solid", // Use 'solid' fill type
+          },
+          stroke: {
+            curve: "smooth", // Make the line smoother
+          },
+        }).render();
+      }
+
+      function PieChart(sensor_data, chart_id) {
+        //clear the chart
+        document.getElementById(chart_id).innerHTML = "";
+
+        percentages_0 = sensor_data[0].count_0 * 10;
+        percentages_1 = sensor_data[0].count_1 * 10;
+
+        // Initialize the area chart with ApexCharts
+        new ApexCharts(document.getElementById(chart_id), {
+          chart: {
+            height: 350,
+            type: "pie",
+          },
+          labels: ["On", "Off"],
+          series: [percentages_1, percentages_0],
+          colors: ["#66ff66", "#ff6666"], // You can customize the colors as per your preference
+          tooltip: {
+            enabled: true,
+            custom: function ({ seriesIndex, w }) {
+              const count = w.globals.series[seriesIndex] / 10;
+              return `<div class="custom-tooltip">${w.config.labels[seriesIndex]}: ${count}</div>`;
+            },
+          },
+        }).render();
+      }
+
+      function BubbleChart(sensor_data, chart_id) {
+        document.getElementById(chart_id).innerHTML = "";
+
+        new ApexCharts(document.getElementById(chart_id), {
+          chart: {
+            height: 350,
+            type: "bubble",
+          },
+          series: [
+            {
+              name: "Height",
+              data: sensor_data.map(function (e) {
+                return {
+                  x: parseInt(e.timestamp),
+                  y: parseFloat(e.height),
+                  z: parseFloat(e.size),
+                };
+              }),
+            },
+          ],
+          dataLabels: {
+            enabled: false,
+          },
+          fill: {
+            opacity: 0.5,
+          },
+          yaxis: {
+            title: {
+              text: "Height",
+            },
+          },
+        }).render();
+      }
+
+      BubbleChart(
+        JSON.parse("{{ data.one_month_size_height }}".replace(/&#39;/g, '"')),
+        "bubbleChart0"
+      );
+
+      function slideshow() {
+        var splide = new Splide("#main-carousel", {
+          pagination: false,
+        });
+
+        var thumbnails = document.getElementsByClassName("thumbnail");
+        var current;
+
+        for (var i = 0; i < thumbnails.length; i++) {
+          initThumbnail(thumbnails[i], i);
+        }
+
+        function initThumbnail(thumbnail, index) {
+          thumbnail.addEventListener("click", function () {
+            splide.go(index);
+          });
+        }
+
+        splide.on("mounted move", function () {
+          var thumbnail = thumbnails[splide.index];
+
+          if (thumbnail) {
+            if (current) {
+              current.classList.remove("is-active");
+            }
+
+            thumbnail.classList.add("is-active");
+            current = thumbnail;
+          }
+        });
+
+        splide.mount();
+      }
+
+      OneMonth();
+      slideshow();
+      // testChart();
+      // OneDay();
+      // PieChart(
+      //  JSON.parse("{{ data.life_act_soil }}".replace(/&#39;/g, '"')),
+      //  "Year",
+      //  "pieChart2"
+      //);
+    </script>
+
+    <!-- <script src="{{ url_for('static', filename='js/report_gen.js') }}"></script> -->
 
     <!-- Optional JavaScript -->
     <!-- jQuery first, then Popper.js, then Bootstrap JS -->
@@ -159,5 +539,28 @@
       src="https://kit.fontawesome.com/23646de785.js"
       crossorigin="anonymous"
     ></script>
+    <!-- internal css -->
+    <style>
+      .thumbnails {
+        display: flex;
+        margin: 1rem auto 0;
+        padding: 0;
+        justify-content: center;
+      }
+
+      .thumbnail {
+        width: 70px;
+        height: 70px;
+        overflow: hidden;
+        list-style: none;
+        margin: 0 0.2rem;
+        cursor: pointer;
+      }
+
+      .thumbnail img {
+        width: 100%;
+        height: auto;
+      }
+    </style>
   </body>
 </html>

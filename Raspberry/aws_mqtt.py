@@ -10,6 +10,8 @@ import time
 from camera import capture_image
 import math
 from roboflow import Roboflow
+import requests
+import base64
 
 load_dotenv()
 
@@ -97,6 +99,7 @@ def save_image_to_db(image_path):
     return NotImplementedError
 
 def get_plant_size_from_model(image_path):
+    
     rf = Roboflow(api_key="DZakyhtiyjUvgQ96ykBS")
     project = rf.workspace().project("plant_size")
     model = project.version(1).model
