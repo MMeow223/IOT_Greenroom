@@ -16,7 +16,7 @@ def connect_db():
         host="localhost",
         user="root",
         password="",
-        database="iot_greenroom"
+        database="iot_greenroom_2"
     )
     return connection
 
@@ -693,4 +693,3 @@ def get_latest_sensor_data(table, greenroom_id:int):
     
     return result[0][0]
     
-print(get_latest_sensor_data("temperature_sensor", 1))

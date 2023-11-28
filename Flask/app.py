@@ -77,7 +77,7 @@ def on_message(client, userdata, message):
 
 def prepare_sidebar():
     # Get all greenrooms
-    greenrooms = get_greenroom_all()
+    greenrooms = db.get_greenroom_all()
     
     # get current link
     current_link = request.path
@@ -130,14 +130,7 @@ def index():
                 current_water_level = False
         else:
             current_water_level = False
-            
-        # greenrooms[greenrooms.index(gr)]["soil_chart_data"] = soil_chart_data
-        # greenrooms[greenrooms.index(gr)]["light_chart_data"] = light_chart_data
-        # greenrooms[greenrooms.index(gr)]["temperature_chart_data"] = temperature_chart_data
-        
-        # greenrooms[greenrooms.index(gr)]["soil_chart_label"] = soil_chart_label
-        # greenrooms[greenrooms.index(gr)]["light_chart_label"] = light_chart_label
-        # greenrooms[greenrooms.index(gr)]["temperature_chart_label"] = temperature_chart_label
+     
         greenrooms[greenrooms.index(gr)]["temperature"] = db.get_one_month_record("temperature_sensor",gr["greenroom_id"])
         greenrooms[greenrooms.index(gr)]["light"] = db.get_one_month_record("light_sensor",gr["greenroom_id"])
         greenrooms[greenrooms.index(gr)]["soil"] = db.get_one_month_record("soil_moisture_sensor",gr["greenroom_id"])
@@ -250,6 +243,7 @@ def page_greenroom_detail(id):
     
     greenroom["name"] = db.get_greenroom(id)[0]["name"]
     greenroom["image"] = db.get_greenroom(id)[0]["image"]
+    greenroom["id"] = id
 
     greenroom.update(db.get_record_greenroom_all_actuator_mode_one(id))
     
@@ -263,9 +257,9 @@ def page_greenroom_detail(id):
     return render_template('greenroom-detail.html', data=data_template)
 
 
-@app.route('/report_test_1', methods=['GET', 'POST'])
-def report_test():
-    greenroom_id = 1
+@app.route('/report-test/<id>', methods=['GET', 'POST'])
+def report_test(id):
+    greenroom_id = id
     greenrooms= db.get_greenroom(greenroom_id)
     
     one_day_temp = db.get_one_day_record("temperature_sensor",greenroom_id)
