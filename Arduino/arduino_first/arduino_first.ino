@@ -26,11 +26,11 @@ const int PIN_NUTRIENT_PUMP_DIRECTION = 12;
 const int PIN_WATER_PUMP_DIRECTION = 13;
 
 // THRESHOLDS
-const int BRIGHTNESS_LEVEL_ONE = 350;
-const int BRIGHTNESS_LEVEL_TWO = 200;
-const int BRITGHTNESS_LEVEL_THREE = 100;
-const int TEMP_THRES = 30;
-const int SOIL_MOISTURE_THRES = 500;
+int BRIGHTNESS_LEVEL_ONE = 350;
+int BRIGHTNESS_LEVEL_TWO = 200;
+int BRITGHTNESS_LEVEL_THREE = 100;
+int TEMP_THRES = 30;
+int SOIL_MOISTURE_THRES = 500;
 
 // Nutrient pump variables
 bool nutrientPumpOn = false;
@@ -101,90 +101,124 @@ void HandleSerialInput()
 {
   if (Serial.available())
   {
-    int command = Serial.parseInt();
-
-    switch (command)
-    {
-    case 100: // set all actuators to auto mode
-      MODE_LED_ONE = AUTO;
-      MODE_LED_TWO_THREE = AUTO;
-      MODE_FAN = AUTO;
-      MODE_WATER_PUMP = AUTO;
-      break;
-    case 1: // set LED1 to manual mode and turn it off
-      MODE_LED_ONE = MANUAL;
-      digitalWrite(PIN_LED_ONE, LOW);
-      digitalWrite(PIN_LED_TWO, HIGH);
-      digitalWrite(PIN_LED_THREE, HIGH);
-      break;
-    case 10: // set LED1 to manual mode and turn it on
-      MODE_LED_ONE = MANUAL;
-      digitalWrite(PIN_LED_ONE, HIGH);
-      break;
-    case 2: // set LED2 and LED3 to manual mode and turn them off
-      MODE_LED_TWO_THREE = MANUAL;
-      digitalWrite(PIN_LED_ONE, HIGH);
-      digitalWrite(PIN_LED_TWO, LOW);
-      digitalWrite(PIN_LED_THREE, LOW);
-      break;
-    case 20: // set LED2 and LED3 to manual mode and turn them on
-      MODE_LED_TWO_THREE = MANUAL;
-      digitalWrite(PIN_LED_TWO, HIGH);
-      digitalWrite(PIN_LED_THREE, HIGH);
-      break;
-    case 3: // set LED1, LED2 and LED3 to manual mode and turn them off
-      MODE_LED_ONE = MANUAL;
-      MODE_LED_TWO_THREE = MANUAL;
-      digitalWrite(PIN_LED_ONE, LOW);
-      digitalWrite(PIN_LED_TWO, LOW);
-      digitalWrite(PIN_LED_THREE, LOW);
-      break;
-    case 30: // set LED1, LED2 and LED3 to manual mode and turn them on
-      MODE_LED_ONE = MANUAL;
-      MODE_LED_TWO_THREE = MANUAL;
-      digitalWrite(PIN_LED_ONE, HIGH);
-      digitalWrite(PIN_LED_TWO, HIGH);
-      digitalWrite(PIN_LED_THREE, HIGH);
-      break;
-    case 4: // set fan to manual mode and turn it off
-      MODE_FAN = MANUAL;
-      digitalWrite(PIN_FAN, LOW);
-      break;
-    case 40: // set fan to manual mode and turn it on
-      MODE_FAN = MANUAL;
-      digitalWrite(PIN_FAN, HIGH);
-      break;
-    case 5: // set water pump to manual mode and turn it off
-      MODE_WATER_PUMP = MANUAL;
-      digitalWrite(PIN_WATER_PUMP_SPEED, LOW);
-      break;
-    case 50: // set water pump to manual mode and turn it on
-      MODE_WATER_PUMP = MANUAL;
-      digitalWrite(PIN_WATER_PUMP_SPEED, HIGH);
-      break;
-    case 6: // set nutrient pump configuration for later process
-      nutrientPumpScheduledTime = millis();
-      nutrientPumpCounter = 3;
-      break;
-    case 60: // reset nutrient pump configuration
-      nutrientPumpCounter = 0;
-      stopNutrientPump();
-      break;
-    case 999: // print all the sensor values
-      Serial.print("sensor!light:");
-      Serial.println(light_value);
-
-      Serial.print("sensor!temp:");
-      Serial.println((float)temperature_value, 2);
-
-      Serial.print("sensor!soil:");
-      Serial.println(soil_moisture_value);
-
-      Serial.print("sensor!water:");
-      Serial.println(water_level_value);
-    default:
-      break;
+    String str_command = Serial.readString();
+    if(str_command.length() > 4){
+      char str[80] = "";
+      const char delimiter[2] = ":";
+      char *type;
+      char *value;
+      
+      str_command.toCharArray(str, str_command.length() + 1);
+      type = strtok(str, delimiter);
+      value = strtok(NULL, delimiter);
+      if( type == "temperature_threshold" ){
+        TEMP_THRES = atoi(value);
+        Serial.print("New value for TEMP_THRES: ");
+        Serial.println(TEMP_THRES);
+      }else if( type == "moisture_threshold" ){
+        SOIL_MOISTURE_THRES = atoi(value);
+        Serial.print("New value for SOIL_MOISTURE_THRES: ");
+        Serial.println(SOIL_MOISTURE_THRES);
+      }else if( type == "light_threshold_1" ){
+        BRIGHTNESS_LEVEL_ONE = atoi(value);
+        Serial.print("New value for BRIGHTNESS_LEVEL_ONE: ");
+        Serial.println(BRIGHTNESS_LEVEL_ONE);
+      }else if( type == "light_threshold_2" ){
+        BRIGHTNESS_LEVEL_TWO = atoi(value);
+        Serial.print("New value for BRIGHTNESS_LEVEL_TWO: ");
+        Serial.println(BRIGHTNESS_LEVEL_TWO);
+      }else if( type == "light_threshold_3" ){
+        BRITGHTNESS_LEVEL_THREE = atoi(value);
+        Serial.print("New value for BRITGHTNESS_LEVEL_THREE: ");
+        Serial.println(BRITGHTNESS_LEVEL_THREE);
+      }
+      
+    }else{
+      int command = str_command.toInt();
+      switch (command)
+      {
+        case 100: // set all actuators to auto mode
+          MODE_LED_ONE = AUTO;
+          MODE_LED_TWO_THREE = AUTO;
+          MODE_FAN = AUTO;
+          MODE_WATER_PUMP = AUTO;
+          break;
+        case 1: // set LED1 to manual mode and turn it off
+          MODE_LED_ONE = MANUAL;
+          digitalWrite(PIN_LED_ONE, LOW);
+          digitalWrite(PIN_LED_TWO, HIGH);
+          digitalWrite(PIN_LED_THREE, HIGH);
+          break;
+        case 10: // set LED1 to manual mode and turn it on
+          MODE_LED_ONE = MANUAL;
+          digitalWrite(PIN_LED_ONE, HIGH);
+          break;
+        case 2: // set LED2 and LED3 to manual mode and turn them off
+          MODE_LED_TWO_THREE = MANUAL;
+          digitalWrite(PIN_LED_ONE, HIGH);
+          digitalWrite(PIN_LED_TWO, LOW);
+          digitalWrite(PIN_LED_THREE, LOW);
+          break;
+        case 20: // set LED2 and LED3 to manual mode and turn them on
+          MODE_LED_TWO_THREE = MANUAL;
+          digitalWrite(PIN_LED_TWO, HIGH);
+          digitalWrite(PIN_LED_THREE, HIGH);
+          break;
+        case 3: // set LED1, LED2 and LED3 to manual mode and turn them off
+          MODE_LED_ONE = MANUAL;
+          MODE_LED_TWO_THREE = MANUAL;
+          digitalWrite(PIN_LED_ONE, LOW);
+          digitalWrite(PIN_LED_TWO, LOW);
+          digitalWrite(PIN_LED_THREE, LOW);
+          break;
+        case 30: // set LED1, LED2 and LED3 to manual mode and turn them on
+          MODE_LED_ONE = MANUAL;
+          MODE_LED_TWO_THREE = MANUAL;
+          digitalWrite(PIN_LED_ONE, HIGH);
+          digitalWrite(PIN_LED_TWO, HIGH);
+          digitalWrite(PIN_LED_THREE, HIGH);
+          break;
+        case 4: // set fan to manual mode and turn it off
+          MODE_FAN = MANUAL;
+          digitalWrite(PIN_FAN, LOW);
+          break;
+        case 40: // set fan to manual mode and turn it on
+          MODE_FAN = MANUAL;
+          digitalWrite(PIN_FAN, HIGH);
+          break;
+        case 5: // set water pump to manual mode and turn it off
+          MODE_WATER_PUMP = MANUAL;
+          digitalWrite(PIN_WATER_PUMP_SPEED, LOW);
+          break;
+        case 50: // set water pump to manual mode and turn it on
+          MODE_WATER_PUMP = MANUAL;
+          digitalWrite(PIN_WATER_PUMP_SPEED, HIGH);
+          break;
+        case 6: // set nutrient pump configuration for later process
+          nutrientPumpScheduledTime = millis();
+          nutrientPumpCounter = 3;
+          break;
+        case 60: // reset nutrient pump configuration
+          nutrientPumpCounter = 0;
+          stopNutrientPump();
+          break;
+        case 999: // print all the sensor values
+          Serial.print("sensor!light:");
+          Serial.println(light_value);
+    
+          Serial.print("sensor!temp:");
+          Serial.println((float)temperature_value, 2);
+    
+          Serial.print("sensor!soil:");
+          Serial.println(soil_moisture_value);
+    
+          Serial.print("sensor!water:");
+          Serial.println(water_level_value);
+        default:
+          break;
+      }
     }
+    
   }
 }
 
