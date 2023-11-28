@@ -395,6 +395,9 @@
               return String(e.label);
             }),
           },
+          yaxis: {
+            decimalsInFloat: 2,
+          },
           fill: {
             opacity: 0.4, // Adjust the opacity to control the area under the curve
             type: "solid", // Use 'solid' fill type
@@ -434,6 +437,15 @@
       function BubbleChart(sensor_data, chart_id) {
         document.getElementById(chart_id).innerHTML = "";
 
+        console.log(
+          sensor_data.map(function (e) {
+            return {
+              x: parseInt(e.timestamp),
+              y: parseFloat(e.height),
+              z: parseFloat(e.size),
+            };
+          })
+        );
         new ApexCharts(document.getElementById(chart_id), {
           chart: {
             height: 350,

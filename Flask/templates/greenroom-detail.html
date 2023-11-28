@@ -28,15 +28,19 @@
       Nutrient solution low, please fill it immediately!
     </div>
     {% endif %}
-
-    <h1>{% block title %}{{ data.greenroom.name }}{% endblock %}</h1>
+    <h1 class="d-inline">
+      {% block title %}{{ data.greenroom.name }}{% endblock %}
+    </h1>
+    <a href="/report-test/{{data.greenroom.id}}" class="btn btn-sm btn-success">
+      <h3 class="d-inline">View Report</h3>
+    </a>
   </div>
 </div>
 <hr />
 <div class="row">
   <div class="col-6 text-center">
     <img
-      src="https://firebasestorage.googleapis.com/v0/b/iot-greenroom.appspot.com/o/greenroom_images%2F{{data.greenroom.image}}?alt=media"
+      src="{{data.greenroom.image}}"
       class="img-plant-detail"
       alt="Plant Image"
     />
@@ -56,19 +60,33 @@
     </div>
   </div>
 
-  <div class="col-6 card">
-
+  <div class="col-6 card" style="overflow: scroll; height: 40vw">
     <form method="post">
       <div class="form-group">
         <p class="form-title">Actuator Mode</p>
         <p>Nutrient pump is only available in <strong>manual mode</strong></p>
-        <p>Water pump is in <strong>{{data.greenroom.moisture_mode}} mode</strong></p>
-        <p>Growth light is in <strong>{{data.greenroom.light_mode}} mode</strong></p>
-        <p>Fan is in <strong>{{data.greenroom.temperature_mode}} mode</strong></p>
-        <button type="submit" name="reset_auto" class="btn btn-primary" id="reset_auto" value="reset">
+        <p>
+          Water pump is in
+          <strong>{{data.greenroom.moisture_mode}} mode</strong>
+        </p>
+        <p>
+          Growth light is in <strong>{{data.greenroom.light_mode}} mode</strong>
+        </p>
+        <p>
+          Fan is in <strong>{{data.greenroom.temperature_mode}} mode</strong>
+        </p>
+        <button
+          type="submit"
+          name="reset_auto"
+          class="btn btn-primary"
+          id="reset_auto"
+          value="reset"
+        >
           Reset to auto mode
         </button>
-        <small class="form-text text-muted">This will not reset nutrient pump mode</small>
+        <small class="form-text text-muted"
+          >This will not reset nutrient pump mode</small
+        >
       </div>
     </form>
 
@@ -76,28 +94,64 @@
       <p class="form-title">Automation Threshold</p>
       <div class="form-group">
         <label for="soil_threshold">Soil Moisture Threshold</label>
-        <input type="text" class="form-control" id="soil_threshold" name="soil_threshold" value="{{data.greenroom.moisture_threshold}}">
+        <input
+          type="text"
+          class="form-control"
+          id="soil_threshold"
+          name="soil_threshold"
+          value="{{data.greenroom.moisture_threshold}}"
+        />
       </div>
-      <br/>
+      <br />
       <div class="form-group">
         <label for="light_threshold_1">Light Threshold Level 1</label>
-        <input type="text" class="form-control" id="light_threshold_1" name="light_threshold_1" value="{{data.greenroom.light_threshold_1}}">
+        <input
+          type="text"
+          class="form-control"
+          id="light_threshold_1"
+          name="light_threshold_1"
+          value="{{data.greenroom.light_threshold_1}}"
+        />
       </div>
       <div class="form-group">
         <label for="light_threshold_2">Light Threshold Level 2</label>
-        <input type="text" class="form-control" id="light_threshold_2" name="light_threshold_2" value="{{data.greenroom.light_threshold_2}}">
+        <input
+          type="text"
+          class="form-control"
+          id="light_threshold_2"
+          name="light_threshold_2"
+          value="{{data.greenroom.light_threshold_2}}"
+        />
       </div>
       <div class="form-group">
         <label for="light_threshold_3">Light Threshold Level 3</label>
-        <input type="text" class="form-control" id="light_threshold_3" name="light_threshold_3" value="{{data.greenroom.light_threshold_3}}">
+        <input
+          type="text"
+          class="form-control"
+          id="light_threshold_3"
+          name="light_threshold_3"
+          value="{{data.greenroom.light_threshold_3}}"
+        />
       </div>
-      <br/>
+      <br />
       <div class="form-group">
         <label for="temp_threshold">Temperature Threshold</label>
-        <input type="text" class="form-control" id="temp_threshold" name="temp_threshold" value="{{data.greenroom.temperature_threshold}}">
+        <input
+          type="text"
+          class="form-control"
+          id="temp_threshold"
+          name="temp_threshold"
+          value="{{data.greenroom.temperature_threshold}}"
+        />
       </div>
-      <br/>
-      <button type="submit" name="threshold_update" class="btn btn-primary" id="threshold" value="threshold">
+      <br />
+      <button
+        type="submit"
+        name="threshold_update"
+        class="btn btn-primary"
+        id="threshold"
+        value="threshold"
+      >
         Update
       </button>
     </form>
@@ -105,36 +159,35 @@
     <form method="post">
       <div class="form-group">
         <p class="form-title">Nutrient Pump</p>
-        {% if data.greenroom.water_level == False %} 
-          {% if data.greenroom.water_action == "0" %}
-          <p>
-            Nutrient Pump last activated on {{data.greenroom.water_timestamp}}
-          </p>
-          <button
-            type="submit"
-            class="btn btn-primary"
-            name="water"
-            id="nutrient_on"
-            value="1"
-          >
-            Turn On
-          </button>
-          {% else %}
-          <p>
-            Nutrient Pump currently running, will stop on
-            {{data.greenroom.water_timestamp}}
-          </p>
-          <button
-            type="submit"
-            class="btn btn-primary"
-            name="water"
-            id="nutrient_off"
-            value="0"
-          >
-            Turn Off
-          </button>
-          {% endif %} 
+        {% if data.greenroom.water_level == False %} {% if
+        data.greenroom.water_action == "0" %}
+        <p>
+          Nutrient Pump last activated on {{data.greenroom.water_timestamp}}
+        </p>
+        <button
+          type="submit"
+          class="btn btn-primary"
+          name="water"
+          id="nutrient_on"
+          value="1"
+        >
+          Turn On
+        </button>
         {% else %}
+        <p>
+          Nutrient Pump currently running, will stop on
+          {{data.greenroom.water_timestamp}}
+        </p>
+        <button
+          type="submit"
+          class="btn btn-primary"
+          name="water"
+          id="nutrient_off"
+          value="0"
+        >
+          Turn Off
+        </button>
+        {% endif %} {% else %}
         <p>
           Nutrient Pump last activated on {{data.greenroom.water_timestamp}}
         </p>
@@ -210,7 +263,7 @@
         <label for="light_two">Brightness Level 2</label><br />
         <input type="radio" name="light" id="light_three" value="3" {% if
         data.greenroom.light_action == '3' %} checked {% endif %} >
-        <label for="light_three">Brightness Level 3</label><br /><br/>
+        <label for="light_three">Brightness Level 3</label><br /><br />
         <button type="submit" class="btn btn-primary">Update</button>
       </div>
     </form>
