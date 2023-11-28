@@ -15,13 +15,14 @@ from firebase_admin import credentials, storage
 import aws_rds_com as db
 from dotenv import load_dotenv
 
+load_dotenv()
+
 AWS_CLIENT = os.getenv("AWS_CLIENT")
 AWS_ENDPOINT = os.getenv("AWS_ENDPOINT")
 AWS_ROOT_CA = os.getenv("AWS_ROOT_CA")
 AWS_PRIVATE_KEY = os.getenv("AWS_PRIVATE_KEY")
 AWS_CERTIFICATE = os.getenv("AWS_CERTIFICATE")
 
-load_dotenv()
 CREDENTIALS = os.getenv("CREDENTIALS")
 FIREBASE_STORAGE = os.getenv("FIREBASE_STORAGE")
 cred = credentials.Certificate(CREDENTIALS)
@@ -34,9 +35,9 @@ actuator_topic = "actuator"
 scheduler_topic = "scheduler"
 sensor_topic = "sensor"
 
-myMQTTClient = None
+myMQTTClient = AWSIoTMQTTClient(AWS_CLIENT)
 def aws_iot_connection():
-
+    
     # AWS IoT certificate based connection
     myMQTTClient.configureEndpoint(AWS_ENDPOINT, 8883)
     myMQTTClient.configureCredentials(AWS_ROOT_CA, AWS_PRIVATE_KEY, AWS_CERTIFICATE)
@@ -50,7 +51,9 @@ def aws_iot_connection():
     subscribe_topic()
 
 def subscribe_topic():
-    myMQTTClient.subscribe(sensor_topic, 1, on_message)
+    result = myMQTTClient.subscribe(sensor_topic, 1, on_message)
+    print("RESULT FOR SUBSCRIBE")
+    print(result)
 
 # Messages from Arduino -> PI -> Cloud, expect the format of "table_type!data_type:value;greenroom_id"
 def on_message(client, userdata, message):
@@ -74,12 +77,11 @@ def on_message(client, userdata, message):
 
 def prepare_sidebar():
     # Get all greenrooms
-    greenrooms = db.get_greenroom_all()
+    greenrooms = get_greenroom_all()
     
     # get current link
     current_link = request.path
     current_link = current_link.split("/")[1]
-    print(current_link)
     
     # prepare sidebar
     sidebar = []
@@ -91,6 +93,9 @@ def prepare_sidebar():
         })
         
     return sidebar
+
+aws_iot_connection()
+
 @app.route('/')
 def index():
     
@@ -190,6 +195,26 @@ def create_greenroom_page():
 @app.route('/greenroom-detail/<id>', methods=['GET', 'POST'])
 def page_greenroom_detail(id):
     all_param = ["water", "soil", "light", "temp"]
+    thres_param = ["soil_threshold", "light_threshold_1", "light_threshold_2", "light_threshold_3", "temp_threshold"]
+
+    reset = request.form.get("reset_auto")
+    if reset != None:
+        for param in all_param:
+            if(param != "water"):
+                update_mode(param, "auto", id)
+        result = myMQTTClient.publish(actuator_topic, reset, 1)
+        print("RESULT FOR PUBLISH")
+        print(result)
+
+    threshold = request.form.get("threshold_update")
+    if threshold != None:
+        for param in thres_param:
+            value = request.form.get(param)
+            msg = f"{param}:{value}"
+            result = myMQTTClient.publish(actuator_topic, msg, 1)
+            print("RESULT FOR PUBLISH")
+            print(result)
+
     for param in all_param:
         value = request.form.get(param)
         if value != None:
@@ -214,7 +239,6 @@ def page_greenroom_detail(id):
     # get the last one
     if len(current_water_level) > 0:
         current_water_level = str(current_water_level[0]["value"])
-        print(current_water_level)
         if current_water_level == "0.00":
             current_water_level = True
         else:
@@ -324,18 +348,7 @@ def report_test():
 def analysis():
     return render_template('analysis.html')
 
-# def scheduler_read_sensor():
-#     print("Publishing to read sensor data...")
-#     client.publish(scheduler_topic, "read")
-
 if __name__ == '__main__':
-    myMQTTClient = AWSIoTMQTTClient(AWS_CLIENT)
     aws_iot_connection()
-
-    # scheduler = BackgroundScheduler()
-    # scheduler.add_job(scheduler_read_sensor, 'interval', minutes=15)
-    # scheduler.start()
-
     app.run(debug=True)
-
     
