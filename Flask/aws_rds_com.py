@@ -15,8 +15,8 @@ def connect_db():
     connection = mysql.connector.connect(
         host="localhost",
         user="root",
-        password="",
-        database="iot_greenroom_2"
+        password="password",
+        database="iot_greenroom"
     )
     return connection
 
@@ -285,11 +285,19 @@ def get_record_greenroom_all_actuator_threshold_one(greenroom_id, today=False):
         
     return result_dict
 
-def insert_threshold(type:str, threshold:float, greenroom_id:int, level:int = None):
+def insert_threshold(type:str, threshold:int, greenroom_id:int):
     CONVERSION = {
-        'temp' : "temperature_actuator_threshold",
-        'light' : "light_actuator_threshold",
-        'soil' : "soil_moisture_actuator_threshold"
+        'temp_threshold' : "temperature_actuator_threshold",
+        'light_threshold_1' : "light_actuator_threshold",
+        'light_threshold_2' : "light_actuator_threshold",
+        'light_threshold_3' : "light_actuator_threshold",
+        'soil_threshold' : "soil_moisture_actuator_threshold"
+    }
+
+    LEVEL_CONVERSION = {
+        'light_threshold_1' : 1,
+        'light_threshold_2' : 2,
+        'light_threshold_3' : 3
     }
 
     conn = connect_db()
@@ -297,6 +305,7 @@ def insert_threshold(type:str, threshold:float, greenroom_id:int, level:int = No
     table = CONVERSION[type]
 
     if table == "light_actuator_threshold":
+        level = LEVEL_CONVERSION[type]
         sql = "INSERT INTO `"+table+"` (threshold,greenroom_id,level) VALUES (%s,%s,%s)"
         param = (threshold, greenroom_id, level)
     else:
@@ -329,16 +338,52 @@ def insert_sensor(type:str, value:float, greenroom_id:int):
         'light' : "light_sensor",
         'air' : "air_moisture_sensor",
         'soil' : "soil_moisture_sensor",
-        'water' : "water_level_sensor"
+        'water' : "water_level_sensor",
+        'size' : "plant_size_height",
+        'height' : "plant_size_height"
     }
 
     conn = connect_db()
     cursor = conn.cursor()
     table = CONVERSION[type]
-    sql = "INSERT INTO `"+table+"` (value,greenroom_id) VALUES (%s,%s)"
-    param = (value, greenroom_id)
-    cursor.execute(sql, param)
-    conn.commit()
+
+    if table == "plant_size_height":
+        sql = "SELECT id, size, height FROM `"+table+"` WHERE greenroom_id = %s ORDER BY timestamp DESC LIMIT 1"
+        param = (greenroom_id,)
+        cursor.execute(sql, param)
+        result = cursor.fetchone()
+        row_id = result[0]
+        size = result[1]
+        height = result[2]
+
+        if type == 'size':
+            if size != None:
+                sql = "INSERT INTO `"+table+"` (size,greenroom_id) VALUES (%s,%s)"
+                param = (value, greenroom_id)
+                cursor.execute(sql, param)
+                conn.commit()
+            else:
+                sql = "UPDATE `"+table+"` SET size = %s WHERE id = %s"
+                param = (value, row_id)
+                cursor.execute(sql, param)
+                conn.commit()
+        elif type == 'height':
+            if height != None:
+                sql = "INSERT INTO `"+table+"` (height,greenroom_id) VALUES (%s,%s)"
+                param = (value, greenroom_id)
+                cursor.execute(sql, param)
+                conn.commit()
+            else:
+                sql = "UPDATE `"+table+"` SET height = %s WHERE id = %s"
+                param = (value, row_id)
+                cursor.execute(sql, param)
+                conn.commit()
+
+    else:
+        sql = "INSERT INTO `"+table+"` (value,greenroom_id) VALUES (%s,%s)"
+        param = (value, greenroom_id)
+        cursor.execute(sql, param)
+        conn.commit()
 
 def update_mode(type:str, mode:str, greenroom_id:int):
     CONVERSION = {

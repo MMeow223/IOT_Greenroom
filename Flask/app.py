@@ -194,7 +194,7 @@ def page_greenroom_detail(id):
     if reset != None:
         for param in all_param:
             if(param != "water"):
-                update_mode(param, "auto", id)
+                db.update_mode(param, "auto", id)
         result = myMQTTClient.publish(actuator_topic, reset, 1)
         print("RESULT FOR PUBLISH")
         print(result)
@@ -204,6 +204,7 @@ def page_greenroom_detail(id):
         for param in thres_param:
             value = request.form.get(param)
             msg = f"{param}:{value}"
+            db.insert_threshold(param, value, id)
             result = myMQTTClient.publish(actuator_topic, msg, 1)
             print("RESULT FOR PUBLISH")
             print(result)
@@ -216,7 +217,7 @@ def page_greenroom_detail(id):
             db.insert_activity(param,value,id)
             if(param != "water"):
                 db.update_mode(param, "manual", id)
-            myMQTTClient.publish(actuator_topic, msg)
+            myMQTTClient.publish(actuator_topic, msg, 1)
 
     greenroom = db.get_record_greenroom_all_actuator_one(id)
     for i in db.get_record_greenroom(id,type="soil_moisture"):
@@ -246,6 +247,8 @@ def page_greenroom_detail(id):
     greenroom["id"] = id
 
     greenroom.update(db.get_record_greenroom_all_actuator_mode_one(id))
+
+    greenroom.update(db.get_record_greenroom_all_actuator_threshold_one(id))
     
     print(greenroom)
     
