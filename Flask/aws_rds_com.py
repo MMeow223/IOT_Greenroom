@@ -420,10 +420,16 @@ def get_one_day_record(table,greenroom_id):
     result_list = []
     for row in result:
         # return in value and label
-        result_dict = {
-            "value": str(row[1]),  # Convert Decimal to string
-            "label": str(row[0])  # Format datetime as string
-        }
+        if table == "soil_moisture_sensor":
+            result_dict = {
+                "value": "{:.2f}".format(100 - (row[1]/1023*100)),  # Convert Decimal to string
+                "label": str(row[0])  # Format datetime as string
+            }
+        else:
+            result_dict = {
+                "value": str(row[1]),  # Convert Decimal to string
+                "label": str(row[0])  # Format datetime as string
+            }
         result_list.append(result_dict)
         
     return result_list
@@ -446,10 +452,16 @@ def get_one_month_record(table,greenroom_id):
     result_list = []
     for row in result:
         # return in value and label
-        result_dict = {
-            "value": str(row[1]),  # Convert Decimal to string
-            "label": str(row[0])  # Format datetime as string
-        }
+        if table == "soil_moisture_sensor":
+            result_dict = {
+                "value": "{:.2f}".format(100 - (row[1]/1023*100)),  # Convert Decimal to string
+                "label": str(row[0])  # Format datetime as string
+            }
+        else:
+            result_dict = {
+                "value": str(row[1]),  # Convert Decimal to string
+                "label": str(row[0])  # Format datetime as string
+            }
         result_list.append(result_dict)
         
     return result_list
@@ -471,10 +483,16 @@ def get_one_year_record(table,greenroom_id):
     result_list = []
     for row in result:
         # return in value and label
-        result_dict = {
-            "value": str(row[1]),  # Convert Decimal to string
-            "label": str(row[0])  # Format datetime as string
-        }
+        if table == "soil_moisture_sensor":
+            result_dict = {
+                "value": "{:.2f}".format(100 - (row[1]/1023*100)),  # Convert Decimal to string
+                "label": str(row[0])  # Format datetime as string
+            }
+        else:
+            result_dict = {
+                "value": str(row[1]),  # Convert Decimal to string
+                "label": str(row[0])  # Format datetime as string
+            }
         result_list.append(result_dict)
         
     return result_list
@@ -500,10 +518,16 @@ def get_life_time_record(table,greenroom_id):
     result_list = []
     for row in result:
         # return in value and label
-        result_dict = {
-            "value": str(row[1]),  # Convert Decimal to string
-            "label": str(row[0])  # Format datetime as string
-        }
+        if table == "soil_moisture_sensor":
+            result_dict = {
+                "value": "{:.2f}".format(100 - (row[1]/1023*100)),  # Convert Decimal to string
+                "label": str(row[0])  # Format datetime as string
+            }
+        else:
+            result_dict = {
+                "value": str(row[1]),  # Convert Decimal to string
+                "label": str(row[0])  # Format datetime as string
+            }
         result_list.append(result_dict)
         
     return result_list
@@ -736,5 +760,5 @@ def get_latest_sensor_data(table, greenroom_id:int):
     result = cursor.fetchall()
     cursor.close()
     
-    return result[0][0]
+    return result[0][1]
     

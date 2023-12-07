@@ -35,6 +35,22 @@ actuator_topic = "actuator"
 scheduler_topic = "scheduler"
 sensor_topic = "sensor"
 
+commands = {
+    "light:0": "30",
+    "light:1": "1",
+    "light:2": "2",
+    "light:3": "3",
+    "temp:0": "40",
+    "temp:1": "4",
+    "soil:0": "5",
+    "soil:1": "50",
+    "water:0": "60",
+    "water:1": "6",
+    "reset": "100",
+    "read_height": "101",
+    "read": "999"
+}
+
 myMQTTClient = AWSIoTMQTTClient(AWS_CLIENT)
 def aws_iot_connection():
     
@@ -137,6 +153,7 @@ def index():
         greenrooms[greenrooms.index(gr)]["current_temp_value"] = db.get_latest_sensor_data("temperature_sensor",gr["greenroom_id"])
         greenrooms[greenrooms.index(gr)]["current_light_value"] = db.get_latest_sensor_data("light_sensor",gr["greenroom_id"])
         greenrooms[greenrooms.index(gr)]["current_soil_value"] = db.get_latest_sensor_data("soil_moisture_sensor",gr["greenroom_id"])
+        greenrooms[greenrooms.index(gr)]["current_soil_value"] = "{:.2f}".format( 100 - (float(greenrooms[greenrooms.index(gr)]["current_soil_value"])/1023*100) )
         greenrooms[greenrooms.index(gr)]["water_level"] = current_water_level
         
     data_template = {
@@ -195,7 +212,7 @@ def page_greenroom_detail(id):
         for param in all_param:
             if(param != "water"):
                 db.update_mode(param, "auto", id)
-        result = myMQTTClient.publish(actuator_topic, reset, 1)
+        result = myMQTTClient.publish(actuator_topic, commands[reset], 1)
         print("RESULT FOR PUBLISH")
         print(result)
 
@@ -217,7 +234,7 @@ def page_greenroom_detail(id):
             db.insert_activity(param,value,id)
             if(param != "water"):
                 db.update_mode(param, "manual", id)
-            myMQTTClient.publish(actuator_topic, msg, 1)
+            myMQTTClient.publish(actuator_topic, commands[msg], 1)
 
     greenroom = db.get_record_greenroom_all_actuator_one(id)
     for i in db.get_record_greenroom(id,type="soil_moisture"):
