@@ -111,23 +111,23 @@ void HandleSerialInput()
       str_command.toCharArray(str, str_command.length() + 1);
       type = strtok(str, delimiter);
       value = strtok(NULL, delimiter);
-      if( type == "temperature_threshold" ){
+      if( strcmp(type,"temperature_threshold") == 0 ){
         TEMP_THRES = atoi(value);
         Serial.print("New value for TEMP_THRES: ");
         Serial.println(TEMP_THRES);
-      }else if( type == "moisture_threshold" ){
+      }else if( strcmp(type,"moisture_threshold") == 0 ){
         SOIL_MOISTURE_THRES = atoi(value);
         Serial.print("New value for SOIL_MOISTURE_THRES: ");
         Serial.println(SOIL_MOISTURE_THRES);
-      }else if( type == "light_threshold_1" ){
+      }else if( strcmp(type,"light_threshold_1") == 0 ){
         BRIGHTNESS_LEVEL_ONE = atoi(value);
         Serial.print("New value for BRIGHTNESS_LEVEL_ONE: ");
         Serial.println(BRIGHTNESS_LEVEL_ONE);
-      }else if( type == "light_threshold_2" ){
+      }else if( strcmp(type,"light_threshold_2") == 0 ){
         BRIGHTNESS_LEVEL_TWO = atoi(value);
         Serial.print("New value for BRIGHTNESS_LEVEL_TWO: ");
         Serial.println(BRIGHTNESS_LEVEL_TWO);
-      }else if( type == "light_threshold_3" ){
+      }else if( strcmp(type,"light_threshold_3") == 0 ){
         BRITGHTNESS_LEVEL_THREE = atoi(value);
         Serial.print("New value for BRITGHTNESS_LEVEL_THREE: ");
         Serial.println(BRITGHTNESS_LEVEL_THREE);

@@ -115,7 +115,7 @@
     href="{{ url_for('page_greenroom_detail', id=gr.greenroom_id) }}"
   >
     <div
-      class="card greenroom-container p-1 m-2 {% if gr.water_level %} border-danger border-5 {% endif %}"
+      class="card w-50 greenroom-container p-1 m-2 {% if gr.water_level %} border-danger border-5 {% endif %}"
     >
       <!-- ! icon -->
       {% if gr.water_level %}
@@ -135,21 +135,21 @@
       <div class="card-body">
         <div class="d-flex justify-content-between">
           <div class="mb-5" style="width: 200px; height: auto">
-            <p class="title-current-data">Temp</p>
+            <p class="title-current-data">Temp (&deg;C)</p>
             <h1 id="current_data{{gr.greenroom_id}}0" class="text-center">
               {{gr.current_temp_value}}
             </h1>
             <div id="lineChart{{ gr.greenroom_id }}0"></div>
           </div>
           <div class="mb-5" style="width: 200px; height: auto">
-            <p class="title-current-data">Light</p>
+            <p class="title-current-data">Light (LUX)</p>
             <h1 id="current_data{{gr.greenroom_id}}1" class="text-center">
               {{gr.current_light_value}}
             </h1>
             <div id="lineChart{{ gr.greenroom_id }}1"></div>
           </div>
           <div class="mb-5" style="width: 200px; height: auto">
-            <p class="title-current-data">Soil</p>
+            <p class="title-current-data">Soil Moisture (%)</p>
             <h1 id="current_data{{gr.greenroom_id}}2" class="text-center">
               {{gr.current_soil_value}}
             </h1>
