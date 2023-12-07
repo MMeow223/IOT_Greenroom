@@ -12,7 +12,7 @@ import math
 from roboflow import Roboflow
 import requests
 import base64
-
+import aws_rds_com as db
 load_dotenv()
 
 AWS_CLIENT = os.getenv("AWS_CLIENT")
@@ -76,12 +76,15 @@ def firebase_storage(bucket_dir, image_path):
         blob.upload_from_string(image_data, content_type="image/jpeg")
 
         print(f"Image {image_path} uploaded to Firebase Storage at {destination_blob_name}")
+        
+        # save the image link to database
+        db.save_plant_image(destination_blob_name, 1)
+        
     except Exception as e:
         print(f"Error uploading image: {e}")
 
     firebase_admin.delete_app(firebase_admin.get_app())
 
-    
 
 def plant_width(plant_width_camera, plant_height, distance_to_soil):
 
@@ -95,9 +98,6 @@ def plant_width(plant_width_camera, plant_height, distance_to_soil):
     focal_length = 2495.6
     result = abs(2 * math.tan(2 * math.atan(plant_width_camera / (2 * focal_length))) * (distance_to_soil - plant_height)) 
     return result
-
-def save_image_to_db(image_path):
-    return NotImplementedError
 
 def get_plant_size_from_model(image_path):
     
@@ -199,7 +199,6 @@ def scheduler_job():
 
     image_path = capture_image()
     firebase_storage("plant_size_image", image_path)
-    save_image_to_db(image_path)
     
     print("Take picture")
     print("Location" + image_path)
