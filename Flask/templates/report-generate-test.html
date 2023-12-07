@@ -62,7 +62,7 @@
               id="one_day_btn"
               onclick="OneDay()"
             >
-              One Day
+              Today
             </button>
             <button
               type="button"
@@ -70,7 +70,7 @@
               id="one_month_btn"
               onclick="OneMonth()"
             >
-              One Month
+              This Month
             </button>
             <button
               type="button"
@@ -78,7 +78,7 @@
               id="one_year_btn"
               onclick="OneYear()"
             >
-              One Year
+              This Year
             </button>
             <button
               type="button"
@@ -86,7 +86,7 @@
               id="life_btn"
               onclick="LifeTime()"
             >
-              Lifetime
+              All Time
             </button>
             <button
               type="button"
@@ -450,6 +450,13 @@
           chart: {
             height: 350,
             type: "bubble",
+          },
+          plotOptions: {
+            bubble: {
+              zScaling: true,
+              minBubbleRadius: 0,
+              maxBubbleRadius: 50,
+            },
           },
           series: [
             {
